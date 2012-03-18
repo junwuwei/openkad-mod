@@ -1,0 +1,9 @@
+syntax:glob
+*.class
+*.orig
+.classpath
+.project
+.settings
+bin
+lib
+log

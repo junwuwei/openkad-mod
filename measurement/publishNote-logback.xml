@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+	<!-- <consolePlugin /> -->
+	<contextName>PUBLISH_NOTE_MEASUREMENT</contextName>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder 
+			by default -->
+		<encoder>
+			<pattern>%date ${CONTEXT_NAME} [%thread] %-5level %logger{36} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>log/publishTimespan.log</file>
+		<encoder>
+			<pattern>%date %-6level [%thread] %logger{16}[%file:%line] %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="FILE2" class="ch.qos.logback.core.FileAppender">
+		<file>log/publishNoteTimespan.log</file>
+		<encoder>
+			<pattern>%msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="cn.edu.jnu.cs.emulekad.op.EMuleFindNodeOperation"
+		level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="cn.edu.jnu.cs.emulekad.op.EMuleFindValueOperation"
+		level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="cn.edu.jnu.cs.emulekad.op.PublishOperation" level="info"
+		additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="cn.edu.jnu.cs.emulekad.op.SearchOperation" level="info"
+		additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="cn.edu.jnu.cs.emulekad.EMuleKadNet" level="info"
+		additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<logger name="cn.edu.jnu.cs.emulekad.PublishNoteTimespan"
+		level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE2" />
+	</logger>
+
+	<root level="off">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
