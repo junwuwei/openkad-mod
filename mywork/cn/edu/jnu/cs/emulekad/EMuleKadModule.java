@@ -158,7 +158,7 @@ public class EMuleKadModule extends AbstractModule {
 		// network timeouts and concurrency level
 		defaultProps.setProperty("openkad.net.concurrency", "3");
 		defaultProps.setProperty("openkad.net.timeout",
-				TimeUnit.SECONDS.toMillis(10) + "");
+				TimeUnit.SECONDS.toMillis(3) + "");
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
 				TimeUnit.SECONDS.toMillis(300) + "");
 

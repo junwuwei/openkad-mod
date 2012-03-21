@@ -12,15 +12,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
-import ch.qos.logback.core.util.StatusPrinter;
 import cn.edu.jnu.cs.emulekad.indexer.Entry;
 import cn.edu.jnu.cs.emulekad.util.NodesDatFile;
 
@@ -29,7 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 /**
- *
+ * 
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class PublishSourceTimespan {
@@ -38,7 +35,7 @@ public class PublishSourceTimespan {
 	private final PublishHelper publishHelper;
 
 	private BlockingQueue<PublishRecord> publishRecords = new LinkedBlockingQueue<PublishRecord>();
-	private AtomicInteger nrVanished = new AtomicInteger(0);
+	private BlockingQueue<PublishRecord> vanishedRecords = new LinkedBlockingQueue<PublishRecord>();
 	private CountDownLatch latch;
 	private int nrPublished;
 
@@ -46,8 +43,8 @@ public class PublishSourceTimespan {
 			.getLogger(PublishSourceTimespan.class);
 
 	@Inject
-	public PublishSourceTimespan(EMuleKad eMuleKad,
-			KeyFactory keyFactory, PublishHelper publishHelper) {
+	public PublishSourceTimespan(EMuleKad eMuleKad, KeyFactory keyFactory,
+			PublishHelper publishHelper) {
 		this.eMuleKad = eMuleKad;
 		this.keyFactory = keyFactory;
 		this.publishHelper = publishHelper;
@@ -66,10 +63,11 @@ public class PublishSourceTimespan {
 				publishRecords.add(record);
 			}
 		}
+		nrPublished = publishRecords.size();
+		logger.info("nrPublished={}", nrPublished);
 	}
 
 	public void doSearchTillAllVanish(int nrThread) {
-		nrPublished = publishRecords.size();
 		latch = new CountDownLatch(nrPublished);
 		for (int i = 0; i < nrThread; i++) {
 			Thread thread = creatSearchThread();
@@ -82,7 +80,7 @@ public class PublishSourceTimespan {
 		}
 
 		double averageTimespan = 0;
-		for (PublishRecord record : publishRecords) {
+		for (PublishRecord record : vanishedRecords) {
 			logger.info("{}", record);
 			averageTimespan += record.getTimespan(TimeUnit.HOURS);
 		}
@@ -93,33 +91,44 @@ public class PublishSourceTimespan {
 	private Thread creatSearchThread() {
 		return new Thread() {
 			public void run() {
-				while (nrVanished.get() < nrPublished) {
-					PublishRecord record = null;
-					try {
-						record = publishRecords.take();
-					} catch (InterruptedException e) {
-						logger.error("{}", e);
+				while (vanishedRecords.size() < nrPublished) {
+					PublishRecord record = publishRecords.poll();
+					if (record == null) {
+						continue;
 					}
-					if (record != null && record.vanishTime == 0) {
-						List<Entry> entries = eMuleKad
-								.searchSource(record.targetKey);
-						boolean vanished = true;
-						for (Entry entry : entries) {
-							String retrievedString = publishHelper
-									.getVanishString(entry);
-							if (record.vanishString.equals(retrievedString)) {
-								vanished = false;
-								break;
-							}
+					boolean isVanished = checkVanishStatus(record);
+
+					if (isVanished) {
+						try {
+							vanishedRecords.put(record);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
 						}
-						if (vanished) {
-							record.vanishTime = System.currentTimeMillis();
-							nrVanished.incrementAndGet();
-							latch.countDown();
+//						logger.debug("nrVanished={}", vanishedRecords.size());
+						latch.countDown();
+					} else {
+						try {
+							publishRecords.put(record);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
 						}
-						publishRecords.add(record);
 					}
 				}
+			}
+
+			private boolean checkVanishStatus(PublishRecord record) {
+				List<Entry> entries = eMuleKad.searchSource(record.targetKey);
+
+				for (Entry entry : entries) {
+					String retrievedString = publishHelper
+							.getVanishString(entry);
+					if (record.vanishString.equals(retrievedString)) {
+						return false;
+					}
+				}
+
+				record.vanishTime = System.currentTimeMillis();
+				return true;
 			}
 		};
 
@@ -129,7 +138,8 @@ public class PublishSourceTimespan {
 		return publishRecords;
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws IOException,
+			InterruptedException {
 
 		LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 		JoranConfigurator config = new JoranConfigurator();
@@ -142,29 +152,35 @@ public class PublishSourceTimespan {
 			e.printStackTrace();
 		}
 
-		StatusPrinter.print(lc);
+		// StatusPrinter.print(lc);
 
 		Injector injector = Guice
 				.createInjector(new EMuleKadModule()
 						.setProperty("openkad.refresh.enable", false + "")
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
 								false + "")
-						.setProperty("openkad.net.udp.port", "10000")
+						.setProperty("openkad.net.udp.port", "10003")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
 								false + "").setProperty("openkad.seed", "0"));
 
-		EMuleKadNet eMuleKad = injector.getInstance(EMuleKadNet.class);
+		 EMuleKadNet eMuleKad = injector.getInstance(EMuleKadNet.class);
+//		FakeEMuleKad eMuleKad = new FakeEMuleKad(OperationResult.SUCCESS);
 		eMuleKad.create();
 		NodesDatFile nodesDatFile = injector.getInstance(NodesDatFile.class);
 		eMuleKad.joinNode(nodesDatFile.readNodeFromFile());
 
-		PublishSourceTimespan measurement = injector
-				.getInstance(PublishSourceTimespan.class);
-		
-		measurement.doPublish(100);
-		TimeUnit.HOURS.sleep(2);
-		measurement.doSearchTillAllVanish(10);
-		
+		 PublishSourceTimespan measurement = injector
+		 .getInstance(PublishSourceTimespan.class);
+//		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
+//		PublishHelper publishHelper = injector.getInstance(PublishHelper.class);
+//		PublishSourceTimespan measurement = new PublishSourceTimespan(eMuleKad,
+//				keyFactory, publishHelper);
+
+		measurement.doPublish(500);
+		 TimeUnit.HOURS.sleep(3);
+//		eMuleKad.setOperationResult(OperationResult.FAIL);
+		measurement.doSearchTillAllVanish(20);
+
 		eMuleKad.shutdown();
 	}
 

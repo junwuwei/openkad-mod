@@ -17,6 +17,7 @@ import il.technion.ewolf.kbr.openkad.op.FindNodeOperation;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -53,8 +54,9 @@ public class EMuleFindNodeOperation implements
 	private final int kBucketSize;
 	private final KBuckets kBuckets;
 	private final Node localNode;
-	
-	//measurement
+	private final int keySize;
+
+	// measurement
 	private int nrQueried;
 	private long costTime;
 
@@ -66,13 +68,14 @@ public class EMuleFindNodeOperation implements
 			@Named("openkad.bucket.kbuckets.maxsize") int kBucketSize,
 			Provider<EMuleKadRequest> EMuleKadRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
-			KBuckets kBuckets) {
+			KBuckets kBuckets, @Named("openkad.keyfactory.keysize") int keySize) {
 
 		this.localNode = localNode;
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
 		this.EMuleKadRequestProvider = EMuleKadRequestProvider;
 		this.msgDispatcherProvider = msgDispatcherProvider;
+		this.keySize = keySize;
 
 		alreadyQueried = new HashSet<Node>();
 		querying = new HashSet<Node>();
@@ -136,7 +139,7 @@ public class EMuleFindNodeOperation implements
 	 * @return a list of nodes closest to the set key
 	 */
 	public List<Node> doFindNode() {
-		logger.info("find node,request type={},key={}", requestType,key);
+		logger.info("find node,request type={},key={}", requestType, key);
 		long startTime = System.currentTimeMillis();
 
 		knownClosestNodes = kBuckets.getClosestNodesByKey(key, kBucketSize);
@@ -186,11 +189,20 @@ public class EMuleFindNodeOperation implements
 		}
 
 		long endTime = System.currentTimeMillis();
-		costTime=endTime - startTime;
+		costTime = endTime - startTime;
 		logger.info("finished find node,key={}, used {} seconds.", key,
 				TimeUnit.MILLISECONDS.toSeconds(endTime - startTime));
 		logger.info("nrQueried={},knownClosestNodes.size()={}", nrQueried,
 				knownClosestNodes.size());
+
+//		logger.debug("targetKey ={}", key);
+//		for (Iterator<Node> iterator = knownClosestNodes.iterator(); iterator
+//				.hasNext();) {
+//			Node node = iterator.next();
+//			logger.debug("ClosestKey={}", node.getKey());
+//		}
+		logger.debug("LongestCommonPrefixLength={}",
+				getLongestCommonPrefixLength());
 
 		return knownClosestNodes;
 	}
@@ -228,5 +240,10 @@ public class EMuleFindNodeOperation implements
 
 	public long getCostTime() {
 		return costTime;
+	}
+
+	public int getLongestCommonPrefixLength() {
+		return keySize * 8 - key.xor(knownClosestNodes.get(0).getKey())
+						.getFirstSetBitIndex();
 	}
 }

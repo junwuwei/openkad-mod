@@ -35,7 +35,8 @@ public class PublishRecord {
 	}
 
 	public String toString() {
-		return String.format(Locale.CHINA, "vanishString=[%1$s] " +
+//		return String.format(Locale.CHINA, "vanishString=[%1$s] " +
+				return String.format(Locale.CHINA,
 				"publishTime=[%2$tm-%2$td %2$tH:%2$tM:%2$tS] nrRecipient=[%3$2d] " +
 				"vanishTime=[%4$tm-%4$td %4$tH:%4$tM:%4$tS] timespan=[%5$.3fh]",
 				vanishString,new Date(publishTime),nrRecipient,new Date(vanishTime),
@@ -47,6 +48,10 @@ public class PublishRecord {
 		PublishRecord record=new PublishRecord(null,"test",System.currentTimeMillis(),10);
 		record.vanishTime=System.currentTimeMillis()+1000000;
 		System.out.println(record);
+	}
+	
+	public boolean isVanished(){
+		return vanishTime!=0;
 	}
 
 }

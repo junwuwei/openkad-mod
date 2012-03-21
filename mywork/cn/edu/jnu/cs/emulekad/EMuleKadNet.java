@@ -88,7 +88,7 @@ public class EMuleKadNet implements EMuleKad {
 	private final KeyFactory keyFactory;
 	private final ExecutorService clientExecutor;
 	private final int bucketSize;
-	private final TimerTask refreshTask;
+//	private final TimerTask refreshTask;
 	// testing
 	private final List<Integer> findNodeHopsHistogram;
 
@@ -114,7 +114,7 @@ public class EMuleKadNet implements EMuleKad {
 			Provider<BootstrapHandler> BootStrapHandlerProvider,
 			Provider<SearchHandler> searchHandlerProvider,
 			Provider<PublishHandler> publishHandlerProvider,
-			@Named("openkad.timer") Timer timer,
+//			@Named("openkad.timer") Timer timer,
 
 			@Named("openkad.local.node") Node localNode,
 			KadServer kadServer,
@@ -123,7 +123,7 @@ public class EMuleKadNet implements EMuleKad {
 			KeyFactory keyFactory,
 			@Named("openkad.executors.client") ExecutorService clientExecutor,
 			@Named("openkad.bucket.kbuckets.maxsize") int bucketSize,
-			@Named("openkad.refresh.task") TimerTask refreshTask,
+//			@Named("openkad.refresh.task") TimerTask refreshTask,
 
 			// testing
 			@Named("openkad.testing.findNodeHopsHistogram") List<Integer> findNodeHopsHistogram) {
@@ -148,7 +148,7 @@ public class EMuleKadNet implements EMuleKad {
 		this.keyFactory = keyFactory;
 		this.clientExecutor = clientExecutor;
 		this.bucketSize = bucketSize;
-		this.refreshTask = refreshTask;
+//		this.refreshTask = refreshTask;
 		// testing
 		this.findNodeHopsHistogram = findNodeHopsHistogram;
 	}
@@ -299,7 +299,7 @@ public class EMuleKadNet implements EMuleKad {
 
 	@Override
 	public void shutdown() {
-		refreshTask.cancel();
+//		refreshTask.cancel();
 		kadServer.shutdown(kadServerThread);
 		logger.info("EMuleKadNet shutdowned.");
 	}
