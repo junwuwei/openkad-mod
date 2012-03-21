@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -57,6 +58,9 @@ import cn.edu.jnu.cs.emulekad.op.PublishOperation;
 import cn.edu.jnu.cs.emulekad.op.SearchOperation;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -567,5 +571,15 @@ public class EMuleKadModule extends AbstractModule {
 		bind(AtomicLong.class).annotatedWith(
 				Names.named("openkad.testing.nrBytesRecved")).toInstance(
 				new AtomicLong(0));
+	}
+	
+	public static void main(String[] args) {
+		Injector injector = Guice.createInjector(new EMuleKadModule());
+//		Map<com.google.inject.Key<?>, Binding<?>> bindings = injector.getAllBindings();
+//		for(com.google.inject.Key<?> key:bindings.keySet()){
+//			System.out.println(key+":"+bindings.get(key));
+//		}
+		com.google.inject.Key<String> key=com.google.inject.Key.get(String.class, Names.named("openkad.keyfactory.keysize"));
+		System.out.println("\n"+injector.getInstance(key));
 	}
 }
