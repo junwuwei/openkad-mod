@@ -27,6 +27,7 @@ import com.google.inject.Injector;
  */
 public class FindNodeMeasurement {
 	private static Injector injector;
+	private static KeyFactory keyFactory;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(FindNodeMeasurement.class);
@@ -40,6 +41,52 @@ public class FindNodeMeasurement {
 						.setProperty("openkad.net.udp.port", "10000")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
 								false + ""));
+		keyFactory = injector.getInstance(KeyFactory.class);
+	}
+
+	static class FindNodeStatistic {
+		double costTime = 0;
+		double nrQueried = 0;
+		double longestCommonProfixLength = 0;
+		String requestType = null;
+
+		public String toString() {
+			return String.format(
+					"requestType=%s, average costTime=%.3f seconds, "
+							+ "nrQueried=%.3f, longestCommonProfixLength=%.3f",
+					requestType,costTime,
+					nrQueried, longestCommonProfixLength);
+		}
+	}
+
+	public static FindNodeStatistic doFindNode(byte findNoteType, int nrRequest) {
+		FindNodeStatistic statistic = new FindNodeStatistic();
+		switch (findNoteType) {
+		case OpCodes.FIND_NODE:
+			statistic.requestType = "FIND_NODE";
+			break;
+		case OpCodes.FIND_VALUE:
+			statistic.requestType = "FIND_VALUE";
+			break;
+		default:
+			statistic.requestType = "STORE";
+		}
+		for (int i = 0; i < nrRequest; i++) {
+			EMuleFindNodeOperation op = injector
+					.getInstance(EMuleFindNodeOperation.class);
+			op.setRequestType(findNoteType).setKey(keyFactory.generate())
+					.doFindNode();
+			statistic.costTime += TimeUnit.MILLISECONDS.toSeconds(op
+					.getCostTime());
+			statistic.nrQueried += op.getNrQueried();
+			statistic.longestCommonProfixLength += op
+					.getLongestCommonPrefixLength();
+		}
+
+		statistic.costTime /= nrRequest;
+		statistic.nrQueried /= nrRequest;
+		statistic.longestCommonProfixLength /= nrRequest;
+		return statistic;
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -54,71 +101,23 @@ public class FindNodeMeasurement {
 		} catch (JoranException e) {
 			e.printStackTrace();
 		}
-		
 //		StatusPrinter.print(lc);
 
-		EMuleKadNet eMuleKad = injector.getInstance(EMuleKadNet.class);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
 		eMuleKad.create();
 		NodesDatFile nodesDatFile = injector.getInstance(NodesDatFile.class);
 		eMuleKad.joinNode(nodesDatFile.readNodeFromFile());
-		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-		int costTime = 0;
-		int nrQueried = 0;
-		int n = 500;
 
-		for (int i = 0; i < n; i++) {
-			EMuleFindNodeOperation op = injector
-					.getInstance(EMuleFindNodeOperation.class);
-			op.setRequestType(OpCodes.FIND_NODE).setKey(keyFactory.generate())
-					.doFindNode();
-			costTime += TimeUnit.MILLISECONDS.toSeconds(op.getCostTime());
-			nrQueried += op.getNrQueried();
-		}
-
-		double costTime_FIND_NODE = 1.0 * costTime / n;
-		double nrQueried_FIND_NODE = 1.0 * nrQueried / n;
-
-		costTime = 0;
-		nrQueried = 0;
-
-		for (int i = 0; i < n; i++) {
-			EMuleFindNodeOperation op = injector
-					.getInstance(EMuleFindNodeOperation.class);
-			op.setRequestType(OpCodes.STORE).setKey(keyFactory.generate())
-					.doFindNode();
-			costTime += TimeUnit.MILLISECONDS.toSeconds(op.getCostTime());
-			nrQueried += op.getNrQueried();
-		}
-
-		double costTime_STORE = 1.0 * costTime / n;
-		double nrQueried_STORE = 1.0 * nrQueried / n;
-
-		costTime = 0;
-		nrQueried = 0;
-
-		for (int i = 0; i < n; i++) {
-			EMuleFindNodeOperation op = injector
-					.getInstance(EMuleFindNodeOperation.class);
-			op.setRequestType(OpCodes.FIND_VALUE).setKey(keyFactory.generate())
-					.doFindNode();
-			costTime += TimeUnit.MILLISECONDS.toSeconds(op.getCostTime());
-			nrQueried += op.getNrQueried();
-		}
-
-		double costTime_FIND_VALUE = 1.0 * costTime / n;
-		double nrQueried_FIND_VALUE = 1.0 * nrQueried / n;
-
-		logger.info(
-				"FIND_NODE findeRequest average cost {} seconds, queried {} nodes.",
-				costTime_FIND_NODE, nrQueried_FIND_NODE);
-		logger.info(
-				"FIND_NODE findeRequest average cost {} seconds, queried {} nodes.",
-				costTime_STORE, nrQueried_STORE);
-		logger.info(
-				"FIND_NODE findeRequest average cost {} seconds, queried {} nodes.",
-
-				costTime_FIND_VALUE, nrQueried_FIND_VALUE);
+		FindNodeStatistic fns1 = doFindNode(OpCodes.FIND_NODE, 500);
+		logger.info("{}", fns1);
+		
+		FindNodeStatistic fns2 = doFindNode(OpCodes.STORE, 500);
+		logger.info("{}", fns2);
+		
+		FindNodeStatistic fns3 = doFindNode(OpCodes.FIND_VALUE, 500);
+		logger.info("{}", fns3);
+		
 		eMuleKad.shutdown();
-
 	}
+
 }

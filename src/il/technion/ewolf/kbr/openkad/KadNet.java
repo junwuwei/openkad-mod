@@ -82,7 +82,7 @@ public class KadNet implements KeybasedRouting {
 			Provider<PingHandler> pingHandler,
 			Provider<StoreHandler> storeHandlerProvider,
 			Provider<ForwardHandler> forwardHandlerProvider,
-			@Named("openkad.timer") Timer timer,
+//			@Named("openkad.timer") Timer timer,
 			
 			@Named("openkad.local.node") Node localNode,
 			KadServer kadServer,

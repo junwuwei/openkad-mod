@@ -11,7 +11,7 @@
 		</encoder>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<file>log/publishTimespan.log</file>
+		<file>log/publishTimespan1001.log</file>
 		<encoder>
 			<pattern>%date %-6level [%thread] %logger{16}[%file:%line] %msg%n
 			</pattern>
@@ -62,7 +62,7 @@
 		<appender-ref ref="FILE2" />
 	</logger>
 
-	<root level="info">
+	<root level="off">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

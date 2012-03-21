@@ -11,7 +11,7 @@
 		</encoder>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<file>log/publishTimespan.log</file>
+		<file>log/publishTimespan1003.log</file>
 		<encoder>
 			<pattern>%date %-6level [%thread] %logger{16}[%file:%line] %msg%n
 			</pattern>
@@ -57,7 +57,7 @@
 	</logger>
 
 	<logger name="cn.edu.jnu.cs.emulekad.PublishSourceTimespan"
-		level="info" additivity="false">
+		level="debug" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE2" />
 	</logger>

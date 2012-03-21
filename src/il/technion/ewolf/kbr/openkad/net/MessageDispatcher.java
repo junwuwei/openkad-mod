@@ -61,7 +61,9 @@ public class MessageDispatcher<A> {
 		
 		this.outstandingRequests = outstandingRequests;
 		this.expecters = expecters;
-		this.timer = timer;
+//		this.timer = timer;
+		timer.cancel();
+		this.timer=new Timer("TimeoutTimer",true);
 		this.timeout = timeout;
 		this.communicator = communicator;
 		this.isDone = new AtomicBoolean(false);
