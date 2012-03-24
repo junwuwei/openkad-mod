@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -120,7 +121,11 @@ public class PublishOperation implements CompletionHandler<KadMessage, Void> {
 
 	@Override
 	public void failed(Throwable exc, Void attachment) {
-		logger.debug("{}", exc);
+		if(exc instanceof TimeoutException){
+			logger.debug(exc.getMessage());
+		}else{
+			logger.error("{}",exc);
+		}
 		nrFailed.incrementAndGet();
 		latch.countDown();
 	}

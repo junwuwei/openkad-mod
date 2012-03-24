@@ -18,15 +18,13 @@ import junit.framework.Assert;
 
 import il.technion.ewolf.kbr.Key;
 import il.technion.ewolf.kbr.KeyFactory;
-import il.technion.ewolf.kbr.KeybasedRouting;
 import il.technion.ewolf.kbr.Node;
+import il.technion.ewolf.kbr.openkad.KBuckets;
 import il.technion.ewolf.kbr.openkad.net.KadServer;
 
 import org.apache.commons.codec.DecoderException;
-import org.jmule.core.edonkey.FileHash;
 import org.jmule.core.edonkey.packet.tag.BSOBTag;
 import org.jmule.core.edonkey.packet.tag.ByteTag;
-import org.jmule.core.edonkey.packet.tag.HashTag;
 import org.jmule.core.edonkey.packet.tag.IntTag;
 import org.jmule.core.edonkey.packet.tag.LongTag;
 import org.jmule.core.edonkey.packet.tag.ShortTag;
@@ -35,7 +33,9 @@ import org.jmule.core.edonkey.packet.tag.Tag;
 import org.jmule.core.edonkey.packet.tag.TagList;
 import org.junit.Test;
 
+import cn.edu.jnu.cs.emulekad.EMuleKad;
 import cn.edu.jnu.cs.emulekad.EMuleKadModule;
+import cn.edu.jnu.cs.emulekad.PublishHelper;
 import cn.edu.jnu.cs.emulekad.indexer.Entry;
 import cn.edu.jnu.cs.emulekad.indexer.tag.TagNames;
 import cn.edu.jnu.cs.emulekad.msg.EMuleKadRequest;
@@ -48,18 +48,19 @@ import cn.edu.jnu.cs.emulekad.util.NodesDatFile;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 
 public class EMuleKadTest {
 
-	private void joinNetwordByBootstrapFromKnownEMuleClient(KeybasedRouting kbr)
+	private void joinNetwordByBootstrapFromKnownEMuleClient(EMuleKad eMuleKad)
 			throws URISyntaxException {
 		int basePort = 4662;
-		// String ip = "219.222.19.30";
-		 String ip = "219.222.19.140";
+		 String ip = "219.222.18.218";
+//		 String ip = "219.222.19.140";
 //		String ip = "219.222.18.234";
 //		String ip = "127.0.0.1";
 		long stratTime = System.currentTimeMillis();
-		kbr.joinURI(Arrays.asList(new URI("openkad.udp://" + ip + ":"
+		eMuleKad.joinURI(Arrays.asList(new URI("openkad.udp://" + ip + ":"
 				+ basePort + "/")));
 		long endTime = System.currentTimeMillis();
 		System.out.println("finished joining, used "
@@ -67,11 +68,11 @@ public class EMuleKadTest {
 				+ " seconds.");
 	}
 
-	private void joinNetwordByLoadNodeDatFile(KeybasedRouting kbr,
+	private void joinNetwordByLoadNodeDatFile(EMuleKad eMuleKad,
 			Injector injector) {
 		NodesDatFile nodesDatFile = injector.getInstance(NodesDatFile.class);
 		long stratTime = System.currentTimeMillis();
-		kbr.joinNode(nodesDatFile.readNodeFromFile());
+		eMuleKad.joinNode(nodesDatFile.readNodeFromFile());
 		long endTime = System.currentTimeMillis();
 		System.out.println("finished joining, used "
 				+ TimeUnit.MILLISECONDS.toSeconds(endTime - stratTime)
@@ -90,7 +91,7 @@ public class EMuleKadTest {
 	@Test
 	public void TwoNodesBootstrapTest() throws IOException, URISyntaxException {
 		int basePort = 10000;
-		List<KeybasedRouting> kbrs = new ArrayList<KeybasedRouting>();
+		List<EMuleKad> eMuleKads = new ArrayList<EMuleKad>();
 		// KadServer server = null;
 		for (int i = 0; i < 2; ++i) {
 			Injector injector = Guice.createInjector(new EMuleKadModule()
@@ -103,24 +104,24 @@ public class EMuleKadTest {
 					.setProperty("openkad.bootstrap.ping_befor_insert",
 							false + ""));
 	
-			KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-			kbr.create();
-			kbrs.add(kbr);
+			EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+			eMuleKad.create();
+			eMuleKads.add(eMuleKad);
 			// server = injector.getInstance(KadServer.class);
 		}
 	
-		kbrs.get(1).joinURI(
+		eMuleKads.get(1).joinURI(
 				Arrays.asList(new URI("emulekad.udp://127.0.0.1:" + basePort
 						+ "/")));
 		System.out.println("finished joining");
-		assertTrue(kbrs.get(0).getNeighbours().isEmpty());
-		assertTrue(kbrs.get(1).getNeighbours().size() == 1);
+		assertTrue(eMuleKads.get(0).getNeighbours().isEmpty());
+		assertTrue(eMuleKads.get(1).getNeighbours().size() == 1);
 	}
 
 	@Test
 	public void TwoNodesPingTest() throws Throwable {
 		int basePort = 10000;
-		List<KeybasedRouting> kbrs = new ArrayList<KeybasedRouting>();
+		List<EMuleKad> eMuleKads = new ArrayList<EMuleKad>();
 		// KadServer server = null;
 		for (int i = 0; i < 2; ++i) {
 			Injector injector = Guice.createInjector(new EMuleKadModule()
@@ -137,19 +138,19 @@ public class EMuleKadTest {
 					.setProperty("openkad.bootstrap.ping_befor_insert",
 							true + ""));
 	
-			KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-			kbr.create();
-			kbrs.add(kbr);
+			EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+			eMuleKad.create();
+			eMuleKads.add(eMuleKad);
 			// server = injector.getInstance(KadServer.class);
 		}
 	
-		kbrs.get(1).joinURI(
+		eMuleKads.get(1).joinURI(
 				Arrays.asList(new URI("emulekad.udp://127.0.0.1:" + basePort
 						+ "/")));
 		System.out.println("finished joining");
-		assertEquals(kbrs.get(0).getNeighbours().get(0), kbrs.get(1)
+		assertEquals(eMuleKads.get(0).getNeighbours().get(0), eMuleKads.get(1)
 				.getLocalNode());
-		assertEquals(kbrs.get(1).getNeighbours().get(0), kbrs.get(0)
+		assertEquals(eMuleKads.get(1).getNeighbours().get(0), eMuleKads.get(0)
 				.getLocalNode());
 	}
 
@@ -173,22 +174,26 @@ public class EMuleKadTest {
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
 								false + "")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
-								true + "")
+								false + "")
 				// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10)
 				// +
 				// "")
 				);
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
 		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-		kbr.create();
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
+		eMuleKad.create();
 
-		joinNetwordByLoadNodeDatFile(kbr, injector);
-
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
+		joinNetwordByLoadNodeDatFile(eMuleKad, injector);
+		
+		KBuckets kBuckets=injector.getInstance(KBuckets.class);
+		
+		System.out.println(kBuckets);
+		
+		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
 				+ " nodes.");
-		kbr.shutdown();
+		eMuleKad.shutdown();
 	}
 
 	@Test
@@ -205,28 +210,28 @@ public class EMuleKadTest {
 				// +
 				// "")
 				);
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
 		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-		kbr.create();
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
+		eMuleKad.create();
 
-		joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		// joinNetwordByLoadNodeDatFile(kbr,injector);
+		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+		// joinNetwordByLoadNodeDatFile(eMuleKad,injector);
 
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
+		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
 				+ " nodes.");
 
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
+		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
 				+ " nodes.");
-		kbr.shutdown();
+		eMuleKad.shutdown();
 		// TimeUnit.MINUTES.sleep(2);
 	}
 
 	@Test
 	public void the2NodesShouldFindEachOther() throws Throwable {
 		int basePort = 10000;
-		List<KeybasedRouting> kbrs = new ArrayList<KeybasedRouting>();
+		List<EMuleKad> eMuleKads = new ArrayList<EMuleKad>();
 		for (int i = 0; i < 2; ++i) {
 			Injector injector = Guice.createInjector(new EMuleKadModule()
 					// .setProperty("openkad.keyfactory.keysize", "1")
@@ -242,42 +247,42 @@ public class EMuleKadTest {
 					.setProperty("openkad.bootstrap.ping_befor_insert",
 							true + ""));
 	
-			KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-			kbr.create();
-			kbrs.add(kbr);
+			EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+			eMuleKad.create();
+			eMuleKads.add(eMuleKad);
 		}
 	
-		kbrs.get(1).joinURI(
+		eMuleKads.get(1).joinURI(
 				Arrays.asList(new URI("emulekad.udp://127.0.0.1:" + basePort
 						+ "/")));
 		System.out.println("finished joining");
 	
-		for (int i = 0; i < kbrs.size(); ++i) {
-			System.out.println(kbrs.get(i));
+		for (int i = 0; i < eMuleKads.size(); ++i) {
+			System.out.println(eMuleKads.get(i));
 			System.out.println("======");
 		}
 	
-		List<Node> findNode = kbrs.get(1).findNode(
-				kbrs.get(0).getLocalNode().getKey());
+		List<Node> findNode = eMuleKads.get(1).findNode(
+				eMuleKads.get(0).getLocalNode().getKey());
 		System.out.println("findeNode=" + findNode);
-		Assert.assertEquals(kbrs.get(0).getLocalNode(), findNode.get(0));
-		Assert.assertEquals(kbrs.get(1).getLocalNode(), findNode.get(1));
+		Assert.assertEquals(eMuleKads.get(0).getLocalNode(), findNode.get(0));
+		Assert.assertEquals(eMuleKads.get(1).getLocalNode(), findNode.get(1));
 	
-		findNode = kbrs.get(0).findNode(kbrs.get(0).getLocalNode().getKey());
-		Assert.assertEquals(kbrs.get(0).getLocalNode(), findNode.get(0));
-		Assert.assertEquals(kbrs.get(1).getLocalNode(), findNode.get(1));
+		findNode = eMuleKads.get(0).findNode(eMuleKads.get(0).getLocalNode().getKey());
+		Assert.assertEquals(eMuleKads.get(0).getLocalNode(), findNode.get(0));
+		Assert.assertEquals(eMuleKads.get(1).getLocalNode(), findNode.get(1));
 		// System.out.println(findNode);
 	
-		findNode = kbrs.get(0).findNode(kbrs.get(1).getLocalNode().getKey());
+		findNode = eMuleKads.get(0).findNode(eMuleKads.get(1).getLocalNode().getKey());
 		System.out.println("findeNode=" + findNode);
-		Assert.assertEquals(kbrs.get(1).getLocalNode(), findNode.get(0));
-		Assert.assertEquals(kbrs.get(0).getLocalNode(), findNode.get(1));
+		Assert.assertEquals(eMuleKads.get(1).getLocalNode(), findNode.get(0));
+		Assert.assertEquals(eMuleKads.get(0).getLocalNode(), findNode.get(1));
 	
-		findNode = kbrs.get(1).findNode(kbrs.get(1).getLocalNode().getKey());
-		Assert.assertEquals(kbrs.get(1).getLocalNode(), findNode.get(0));
-		Assert.assertEquals(kbrs.get(0).getLocalNode(), findNode.get(1));
-		kbrs.get(0).shutdown();
-		kbrs.get(1).shutdown();
+		findNode = eMuleKads.get(1).findNode(eMuleKads.get(1).getLocalNode().getKey());
+		Assert.assertEquals(eMuleKads.get(1).getLocalNode(), findNode.get(0));
+		Assert.assertEquals(eMuleKads.get(0).getLocalNode(), findNode.get(1));
+		eMuleKads.get(0).shutdown();
+		eMuleKads.get(1).shutdown();
 	
 	}
 
@@ -289,38 +294,38 @@ public class EMuleKadTest {
 		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +
 		// "")
 				);
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
 		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-		kbr.create();
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
+		eMuleKad.create();
 		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
 
-//		joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		 joinNetwordByLoadNodeDatFile(kbr,injector);
+//		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+		 joinNetwordByLoadNodeDatFile(eMuleKad,injector);
 
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
+		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
 				+ " nodes.");
 		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
 		Node to = provideOneEmuleNode(keyFactory);
 
 		EMuleKadRequest res = new EMuleKadRequest(System.currentTimeMillis(),
-				kbr.getLocalNode());
-		res.setKey(kbr.getLocalNode().getKey()).setRecipient(to)
+				eMuleKad.getLocalNode());
+		res.setKey(eMuleKad.getLocalNode().getKey()).setRecipient(to)
 				.setRequestType(OpCodes.STORE);
 //		.setRequestType(OpCodes.FIND_NODE);
 //		.setRequestType(OpCodes.FIND_VALUE);
 		KadServer server = injector.getInstance(KadServer.class);
 		server.send(to, res);
-		kbr.shutdown();
+		eMuleKad.shutdown();
 	}
 
 	@Test
 	public void twoNodePublishAndSearchTest() throws URISyntaxException, IOException, DecoderException{
 		int basePort = 10000;
-		List<KeybasedRouting> kbrs = new ArrayList<KeybasedRouting>();
+		List<EMuleKad> eMuleKads = new ArrayList<EMuleKad>();
 		Injector injector=null;
 		for (int i = 0; i < 2; ++i) {
 			injector = Guice.createInjector(new EMuleKadModule()
@@ -337,12 +342,12 @@ public class EMuleKadTest {
 					.setProperty("openkad.bootstrap.ping_befor_insert",
 							true + ""));
 	
-			KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-			kbr.create();
-			kbrs.add(kbr);
+			EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+			eMuleKad.create();
+			eMuleKads.add(eMuleKad);
 		}
 	
-		kbrs.get(1).joinURI(
+		eMuleKads.get(1).joinURI(
 				Arrays.asList(new URI("emulekad.udp://127.0.0.1:" + basePort
 						+ "/")));
 		System.out.println("finished joining");
@@ -370,7 +375,7 @@ public class EMuleKadTest {
 		tagList.addTag(encryption);
 		System.out.println(tagList);
 		
-		Entry entry=new Entry(kbrs.get(1).getLocalNode().getKey(),tagList);
+		Entry entry=new Entry(eMuleKads.get(1).getLocalNode().getKey(),tagList);
 		op.setPublishType(PublishAndSearchType.SOURCE).setTargetKey(targetKey)
 				.addEntry(entry).doPublish();
 		
@@ -379,261 +384,127 @@ public class EMuleKadTest {
 		searchOp.setSearchType(PublishAndSearchType.SOURCE).setFileSize(734197760L)
 				.setStartPosition(0).setTargetKey(targetKey);
 		searchOp.doSearch();
-		kbrs.get(0).shutdown();
-		kbrs.get(1).shutdown();
+		eMuleKads.get(0).shutdown();
+		eMuleKads.get(1).shutdown();
 		
 	}
 	
+
+	
 	@Test
-	public void joinNetworkAndPublishSourceTest() throws Throwable {
+	public void testPublishSourceThenSearch() throws Throwable {
 		Injector injector = Guice.createInjector(new EMuleKadModule()
-		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-				.setProperty("openkad.refresh.enable", false + "").setProperty(
-						"openkad.bootstrap.do_rendom_findnode", false + ""));
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-	
-		kbr.create();
-		// joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		joinNetwordByLoadNodeDatFile(kbr, injector);
-	
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-	
-		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-	
-		Key targetKey = keyFactory.get(IOUtil
-				.hexStringToByteArray("0C2891295454BCBD1240F00E40D0EA1D"));
-		PublishOperation op = injector.getInstance(PublishOperation.class);
-	
-		TagList tagList = new TagList();
-		Tag fileSize = new LongTag(TagNames.TAG_FILESIZE, 734197760L);
-		Tag ip = new IntTag(TagNames.TAG_SOURCEIP,
-				IOUtil.ipBytesToInt(InetAddress.getLocalHost().getAddress()));
-		Tag sourceType=new ByteTag(TagNames.TAG_SOURCETYPE,(byte)1);
-		Tag tcpPort=new ShortTag(TagNames.TAG_SOURCEPORT,(short)10086);
-		Tag udpPort=new ShortTag(TagNames.TAG_SOURCEUPORT,(short)10086);
-		Tag encryption=new ByteTag(TagNames.TAG_ENCRYPTION,(byte)1);
-		tagList.addTag(fileSize);
-		tagList.addTag(ip);
-		tagList.addTag(sourceType);
-		tagList.addTag(tcpPort);
-		tagList.addTag(udpPort);
-		tagList.addTag(encryption);
-		System.out.println(tagList);
+//		.setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
+		.setProperty("openkad.refresh.enable", false + "").setProperty(
+				"openkad.bootstrap.do_rendom_findnode", false + ""));
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+		com.google.inject.Key<Node> key=com.google.inject.Key.get(Node.class, Names.named("openkad.local.node"));
+		Node localNode =injector.getInstance(key);
+		System.out.println(localNode);
 		
-		Entry entry=new Entry(kbr.getLocalNode().getKey(),tagList);
-		op.setPublishType(PublishAndSearchType.SOURCE).setTargetKey(targetKey)
-				.addEntry(entry).doPublish();
-	
-//		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-//				+ " nodes.");
-//		kbr.shutdown();
-//	}
-//
-//	@Test
-//		public void joinNetworkAndSearchSourceTest() throws Throwable {
-//			Injector injector = Guice.createInjector(new EMuleKadModule()
-//			// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-//					.setProperty("openkad.refresh.enable", false + "").setProperty(
-//							"openkad.bootstrap.do_rendom_findnode", false + ""));
-//			KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-//			System.out.println("local node key:"
-//					+ kbr.getLocalNode().getKey().toHexString());
-//			System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-//			kbr.create();
-//	//		joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-//			 joinNetwordByLoadNodeDatFile(kbr,injector);
-//	
-//			System.out.println("kBuckets has " + kbr.getNeighbours().size()
-//					+ " nodes.");
-//	
-//			KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-//			Key targetKey = keyFactory.get(IOUtil
-//					.hexStringToByteArray("0C2891295454BCBD1240F00E40D0EA1D"));
-			SearchOperation searchOp = injector.getInstance(SearchOperation.class);
-	
-			searchOp.setSearchType(PublishAndSearchType.SOURCE).setFileSize(734197760L)
-					.setStartPosition(0).setTargetKey(targetKey);
-			searchOp.doSearch();
-	
-			System.out.println("kBuckets has " + kbr.getNeighbours().size()
-					+ " nodes.");
-			kbr.shutdown();
+		eMuleKad.create();
+//		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+		 joinNetwordByLoadNodeDatFile(eMuleKad,injector);
+		
+		PublishHelper publishHelper=injector.getInstance(PublishHelper.class);
+		String str="hello world!";
+		Entry entry=publishHelper.makeSourceEntry(str);
+		System.out.println(entry);
+		
+		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
+		Key targetKey = keyFactory.generate();
+		eMuleKad.publishSource(targetKey, entry);
+		
+		List<Entry> entries=eMuleKad.searchSource(targetKey);
+		boolean found=false;
+		for (Entry entry2 : entries) {
+			String string=publishHelper.getVanishString(entry2);
+			if(str.equals(string)){
+				found=true;
+				break;
+			}
 		}
-
-	@Test
-	public void joinNetworkAndPublishKeywordTest() throws Throwable {
-		Injector injector = Guice.createInjector(new EMuleKadModule()
-		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-				.setProperty("openkad.refresh.enable", false + "").setProperty(
-						"openkad.bootstrap.do_rendom_findnode", false + ""));
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-	
-		kbr.create();
-//		joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		 joinNetwordByLoadNodeDatFile(kbr,injector);
-	
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-	
-		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-	
-		Key targetKey = keyFactory.create("Îè¹íÊ®Æß");
-		PublishOperation op = injector.getInstance(PublishOperation.class);
-	
-		TagList tagList = new TagList();
-		Tag fileName =new StringTag(TagNames.TAG_FILENAME,"ÌÒ½ã-ÁõµÂ»ª¡¢Ò¶µÂæµ.rmvb");
-		Tag fileSize = new LongTag(TagNames.TAG_FILESIZE, 70122160);
-		Tag sources = new ByteTag(TagNames.TAG_SOURCES, (byte)50);
-		Tag fileType = new StringTag(TagNames.TAG_FILETYPE, "Video");
-		Tag mediaAritist = new StringTag(TagNames.TAG_MEDIA_ARTIST, "éLÆé›öÃÀ");
-		Tag mediaLength= new ShortTag(TagNames.TAG_MEDIA_LENGTH,(short)1241);
-		Tag mediaBitrate= new ShortTag(TagNames.TAG_MEDIA_BITRATE,(short)389);
-		Tag mediaCodec= new StringTag(TagNames.TAG_MEDIA_CODEC,"rv40");
-		Tag publishInfo = new IntTag(TagNames.TAG_PUBLISHINFO,18032180 ); 
-//		byte[] fileHashBytes=IOUtil.hexStringToByteArray("0DC398BFBEEC4877340E17C344E46C83");
-//		FileHash file=new FileHash(fileHashBytes);
-//		Tag fileHash= new HashTag(TagNames.TAG_FILEHASH,file);
-		byte[] hash=IOUtil.hexStringToByteArray("16011AC5524F7F90E34DA1CFA13D27A3179831448FC1A2");
-		ByteBuffer buffer=ByteBuffer.wrap(hash);
-		Tag kadAichHashResult = new BSOBTag(TagNames.TAG_KADAICHHASHRESULT,buffer);
-	
-		tagList.addTag(fileName);
-		tagList.addTag(fileSize);
-		tagList.addTag(sources);
-		tagList.addTag(fileType);
-		tagList.addTag(mediaAritist);
-		tagList.addTag(mediaLength);
-		tagList.addTag(mediaBitrate);
-		tagList.addTag(mediaCodec);
-		tagList.addTag(publishInfo);
-//		tagList.addTag(fileHash);
-		tagList.addTag(kadAichHashResult);
-		System.out.println(tagList);
 		
-		Entry entry=new Entry(kbr.getLocalNode().getKey(),tagList);
-		op.setPublishType(PublishAndSearchType.KEYWORD).setTargetKey(targetKey)
-				.addEntry(entry).doPublish();
-	
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-		kbr.shutdown();
+		eMuleKad.shutdown();
+		
+		assertTrue(found);
 	}
-
 	@Test
-	public void joinNetworkAndSearchKeywordTest() throws Throwable {
+	public void testPublishNoteThenSearch() throws Throwable {
 		Injector injector = Guice.createInjector(new EMuleKadModule()
-		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-				.setProperty("openkad.refresh.enable", false + "").setProperty(
-						"openkad.bootstrap.do_rendom_findnode", false + ""));
-
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-		kbr.create();
-		// joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		joinNetwordByLoadNodeDatFile(kbr, injector);
-
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-
+//		.setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
+		.setProperty("openkad.refresh.enable", false + "").setProperty(
+				"openkad.bootstrap.do_rendom_findnode", false + ""));
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+		com.google.inject.Key<Node> key=com.google.inject.Key.get(Node.class, Names.named("openkad.local.node"));
+		Node localNode =injector.getInstance(key);
+		System.out.println(localNode);
+		
+		eMuleKad.create();
+//		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+		 joinNetwordByLoadNodeDatFile(eMuleKad,injector);
+		
+		PublishHelper publishHelper=injector.getInstance(PublishHelper.class);
+		String str="hello world!";
+		Entry entry=publishHelper.makeNoteEntry(str);
+		System.out.println(entry);
+		
 		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-		Key targetKey = keyFactory.create("Îè¹íÊ®Æß");
-		SearchOperation op = injector.getInstance(SearchOperation.class);
-
-		op.setSearchType(PublishAndSearchType.KEYWORD).setTargetKey(targetKey)
-				.doSearch();
-
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-		kbr.shutdown();
-	}
-
-	@Test
-		public void joinNetworkAndPublishNoteTest() throws Throwable {
-		Injector injector = Guice.createInjector(new EMuleKadModule()
-		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-				.setProperty("openkad.refresh.enable", false + "").setProperty(
-						"openkad.bootstrap.do_rendom_findnode", false + ""));
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-	
-		kbr.create();
-		// joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		joinNetwordByLoadNodeDatFile(kbr, injector);
-	
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-	
-		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-	
-//		Key targetKey = keyFactory.get(IOUtil
-//				.hexStringToByteArray("26B9D0C7022D120640631EA7DE37670C"));
-		Key targetKey = keyFactory.create("³ÂÆ¤");
-		PublishOperation op = injector.getInstance(PublishOperation.class);
-	
-		TagList tagList = new TagList();
-//		Tag fileName =new StringTag(TagNames.TAG_FILENAME,"PoD-divx-hz-cd2.avi");
-//		Tag fileSize = new LongTag(TagNames.TAG_FILESIZE, 734816256L);
-//		Tag fileRating=new ByteTag(TagNames.TAG_FILERATING,(byte)5);
-		Tag description =new StringTag(TagNames.TAG_DESCRIPTION,"ºÃ³Ô£¬ºÃ³Ô£¬ÕæºÃ³Ô£¡");
+		Key targetKey = keyFactory.generate();
+		eMuleKad.publishNote(targetKey, entry);
 		
-//		tagList.addTag(fileName);
-//		tagList.addTag(fileSize);
-//		tagList.addTag(fileRating);
-		tagList.addTag(description);
-		System.out.println(tagList);
-		
-		
-		Entry entry=new Entry(kbr.getLocalNode().getKey(),tagList);
-		op.setPublishType(PublishAndSearchType.NOTE).setTargetKey(targetKey)
-				.addEntry(entry).doPublish();
-	
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-		kbr.shutdown();
+		List<Entry> entries=eMuleKad.searchNote(targetKey);
+		boolean found=false;
+		for (Entry entry2 : entries) {
+			String string=publishHelper.getVanishString(entry2);
+			if(str.equals(string)){
+				found=true;
+				break;
+			}
 		}
-
+		
+		eMuleKad.shutdown();
+		
+		assertTrue(found);
+	}
+	
 	@Test
-	public void joinNetworkAndSearchNodeTest() throws Throwable {
+	public void testPublishKeyWordThenSearch() throws Throwable {
 		Injector injector = Guice.createInjector(new EMuleKadModule()
-		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
-				.setProperty("openkad.refresh.enable", false + "").setProperty(
-						"openkad.bootstrap.do_rendom_findnode", false + ""));
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		System.out.println("local node key:"
-				+ kbr.getLocalNode().getKey().toHexString());
-		System.out.println("local ip:" + kbr.getLocalNode().getInetAddress());
-
-		kbr.create();
-		joinNetwordByBootstrapFromKnownEMuleClient(kbr);
-		// joinNetwordByLoadNodeDatFile(kbr,injector);
-
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-
+//		.setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +"")
+		.setProperty("openkad.refresh.enable", false + "").setProperty(
+				"openkad.bootstrap.do_rendom_findnode", false + ""));
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+		com.google.inject.Key<Node> key=com.google.inject.Key.get(Node.class, Names.named("openkad.local.node"));
+		Node localNode =injector.getInstance(key);
+		System.out.println(localNode);
+		
+		eMuleKad.create();
+//		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+		// joinNetwordByLoadNodeDatFile(eMuleKad,injector);
+		
+		PublishHelper publishHelper=injector.getInstance(PublishHelper.class);
+		String str="hello world!";
+		Entry entry=publishHelper.makeKeywordEntry(str);
+		System.out.println(entry);
+		
 		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-		 Key targetKey = keyFactory.create("³ÂÆ¤");
-//		Key targetKey = keyFactory.get(IOUtil
-//				.hexStringToByteArray("0C2891295454BCBD1240F00E40D0EA1D"));
-		SearchOperation op = injector.getInstance(SearchOperation.class);
-
-		op.setSearchType(PublishAndSearchType.NOTE).setFileSize(734197760L)
-				.setTargetKey(targetKey).doSearch();
-
-		System.out.println("kBuckets has " + kbr.getNeighbours().size()
-				+ " nodes.");
-		kbr.shutdown();
-		// TimeUnit.MINUTES.sleep(2);
+		Key targetKey = keyFactory.generate();
+		eMuleKad.publishKeyword(targetKey, Arrays.asList(entry));
+		
+		List<Entry> entries=eMuleKad.searchKeyword(targetKey);
+		boolean found=false;
+		for (Entry entry2 : entries) {
+			String string=publishHelper.getVanishString(entry2);
+			if(str.equals(string)){
+				found=true;
+				break;
+			}
+		}
+		
+		eMuleKad.shutdown();
+		
+		assertTrue(found);
 	}
 
 }

@@ -80,6 +80,8 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.keyfactory.keysize", "16");
 		defaultProps.setProperty("openkad.keyfactory.hashalgo", "MD4");
 		defaultProps.setProperty("openkad.bucket.kbuckets.maxsize", "10");
+		defaultProps.setProperty("openkad.bucket.kbuckets.optimal.maxsize", "20");
+		defaultProps.setProperty("openkad.kbucket.nrbucket", "30");
 		defaultProps.setProperty("openkad.color.nrcolors", "14");
 		defaultProps.setProperty("openkad.scheme.name", "emulekad.udp");
 		defaultProps.setProperty("openkad.scheme2.name", "emulekad.tcp");
@@ -116,6 +118,7 @@ public class EMuleKadModule extends AbstractModule {
 
 		// search
 		defaultProps.setProperty("openkad.search.recipient_minsize", "1");
+		defaultProps.setProperty("openkad.search.accelerate4vanish", false+"");
 
 		// publish
 		defaultProps.setProperty("openkad.publish.recipient_minsize", "1");
@@ -210,7 +213,7 @@ public class EMuleKadModule extends AbstractModule {
 //		bind(ContentRequest.class);
 
 		bind(KadNode.class);
-		bind(KBuckets.class).in(Scopes.SINGLETON);
+		bind(KBuckets.class).to(OptimalKBuckets.class).in(Scopes.SINGLETON);
 		bind(MessageDispatcher.class);
 		bind(KadSerializer.class).to(EMuleKadSerializer.class).in(
 				Scopes.SINGLETON);
@@ -267,7 +270,7 @@ public class EMuleKadModule extends AbstractModule {
 	@Provides
 	@Named("openkad.bucket.kbuckets")
 	Bucket provideKBucket(
-			@Named("openkad.bucket.kbuckets.maxsize") int maxSize,
+			@Named("openkad.bucket.kbuckets.optimal.maxsize") int maxSize,
 			@Named("openkad.bucket.valid_timespan") long validTimespan,
 			@Named("openkad.executors.ping") ExecutorService pingExecutor,
 			Provider<PingRequest> pingRequestProvider,

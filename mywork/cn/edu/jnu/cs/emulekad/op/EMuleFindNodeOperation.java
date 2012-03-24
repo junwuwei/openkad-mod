@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,7 +236,11 @@ public class EMuleFindNodeOperation implements
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
-		logger.debug("{}", exc);
+		if(exc instanceof TimeoutException){
+			logger.debug(exc.getMessage());
+		}else{
+			logger.error("{}",exc);
+		}
 	}
 
 	public long getCostTime() {

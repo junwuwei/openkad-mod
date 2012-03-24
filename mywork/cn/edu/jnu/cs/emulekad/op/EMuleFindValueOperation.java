@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -213,6 +214,11 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
+		if(exc instanceof TimeoutException){
+			logger.debug(exc.getMessage());
+		}else{
+			logger.error("{}",exc);
+		}
 	}
 
 	public EMuleFindValueOperation setRequestType(byte requestType) {

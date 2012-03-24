@@ -147,7 +147,7 @@ public class KadNetModule extends AbstractModule {
 		bind(ContentRequest.class);
 		
 		bind(KadNode.class);
-		bind(KBuckets.class).in(Scopes.SINGLETON);
+		bind(KBuckets.class).to(SimpleKBuckets.class).in(Scopes.SINGLETON);
 		bind(MessageDispatcher.class);
 		bind(KadSerializer.class).to(JsonKadSerializer.class).in(Scopes.SINGLETON);
 		bind(KadServer.class).in(Scopes.SINGLETON);

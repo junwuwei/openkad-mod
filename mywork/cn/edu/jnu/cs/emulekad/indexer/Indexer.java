@@ -117,7 +117,7 @@ public class Indexer {
 		EntryList entryList = sources.get(noteKey);
 		if (entryList == null) {
 			entryList = new EntryList();
-			sources.put(noteKey, entryList);
+			notes.put(noteKey, entryList);
 		}
 
 		int i = -1;

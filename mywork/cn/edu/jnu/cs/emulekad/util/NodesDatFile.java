@@ -7,6 +7,7 @@ import il.technion.ewolf.kbr.Key;
 import il.technion.ewolf.kbr.KeyFactory;
 import il.technion.ewolf.kbr.Node;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetAddress;
@@ -62,7 +63,12 @@ public class NodesDatFile {
 	 * http://wiki.amule.org/index.php/Nodes.dat_file
 	 */
 	public List<Node> readNodeFromFile(String fileName) {
-		List<Node> $ = null;
+		List<Node> $ = Collections.emptyList();
+		File file=new File(fileName);
+		if(!file.exists()){
+			logger.info("load data from nodes.dat failed. File not exists.");
+			return $;
+		}
 		FileChannel channel = null;
 		try {
 			channel = new RandomAccessFile(fileName, "r").getChannel();

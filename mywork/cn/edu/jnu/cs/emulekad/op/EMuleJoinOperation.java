@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -163,7 +164,11 @@ public class EMuleJoinOperation {
 
 				@Override
 				public void failed(Throwable exc, Void nothing) {
-					logger.debug("{}", exc);
+					if(exc instanceof TimeoutException){
+						logger.debug(exc.getMessage());
+					}else{
+						logger.error("{}",exc);
+					}
 					latch.countDown();
 				}
 			};

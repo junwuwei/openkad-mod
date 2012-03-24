@@ -6,6 +6,7 @@ package cn.edu.jnu.cs.emulekad.op;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -99,8 +100,12 @@ public class BootstrapOperation implements CompletionHandler<KadMessage, Void> {
 
 	@Override
 	public void failed(Throwable exc, Void nothing) {
+		if(exc instanceof TimeoutException){
+			logger.debug(exc.getMessage());
+		}else{
+			logger.error("{}",exc);
+		}
 		latch.countDown();
-		logger.debug("{}",exc);
 	}
 
 	public BootstrapOperation setBootstrap(Collection<Node> bootstrap) {

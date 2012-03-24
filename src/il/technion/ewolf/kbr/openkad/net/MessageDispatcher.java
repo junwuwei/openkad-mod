@@ -159,7 +159,7 @@ public class MessageDispatcher<A> {
 		return f;
 	}
 	
-	private void setupTimeout() {
+	private void setupTimeout(final String msg) {
 		if (!isConsumbale)
 			return;
 		
@@ -167,10 +167,14 @@ public class MessageDispatcher<A> {
 			
 			@Override
 			public void run() {
-				MessageDispatcher.this.cancel(new TimeoutException());
+				MessageDispatcher.this.cancel(new TimeoutException(msg));
 			}
 		};
 		timer.schedule(timeoutTimerTask, timeout);
+	}
+	
+	private void setupTimeout() {
+		setupTimeout("timeout");
 	}
 	
 	public void send(Node to, KadRequest req) {
@@ -184,13 +188,14 @@ public class MessageDispatcher<A> {
 			expecters.add(this);
 			communicator.send(to, req);
 			
-			setupTimeout();
+			setupTimeout("send "+req.getClass().getSimpleName()+" to node{"+ to +"} timeout.");
 			
 		} catch (Exception e) {
 			cancel(e);
 		}
 	}
 	
+
 	public Future<KadMessage> futureSend(Node to, KadRequest req) {
 		
 		FutureCallback<KadMessage, A> f = new FutureCallback<KadMessage, A>();
