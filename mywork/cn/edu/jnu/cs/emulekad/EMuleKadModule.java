@@ -36,6 +36,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -330,7 +331,7 @@ public class EMuleKadModule extends AbstractModule {
 			@Named("openkad.executors.server.nrthreads") int nrThreads,
 			@Named("openkad.executors.server.max_pending") int maxPending) {
 		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(maxPending, true));
+				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("ServerExecutors"));
 	}
 
 	@Provides
@@ -340,7 +341,7 @@ public class EMuleKadModule extends AbstractModule {
 			@Named("openkad.executors.ping.nrthreads") int nrThreads,
 			@Named("openkad.executors.ping.max_pending") int maxPending) {
 		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(maxPending, true));
+				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("PingExecutors"));
 	}
 
 	@Provides
@@ -350,7 +351,7 @@ public class EMuleKadModule extends AbstractModule {
 			@Named("openkad.executors.forward.nrthreads") int nrThreads,
 			@Named("openkad.executors.forward.max_pending") int maxPending) {
 		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(maxPending, true));
+				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("ForwardExecutors"));
 	}
 
 	@Provides
@@ -360,7 +361,7 @@ public class EMuleKadModule extends AbstractModule {
 			@Named("openkad.executors.op.nrthreads") int nrThreads,
 			@Named("openkad.executors.op.max_pending") int maxPending) {
 		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(maxPending, true));
+				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("OperationExecutors"));
 	}
 
 	@Provides
@@ -370,7 +371,7 @@ public class EMuleKadModule extends AbstractModule {
 			@Named("openkad.executors.client.nrthreads") int nrThreads,
 			@Named("openkad.executors.client.max_pending") int maxPending) {
 		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
-				new ArrayBlockingQueue<Runnable>(maxPending, true));
+				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("ClientExecutors"));
 	}
 
 	@Provides
@@ -585,4 +586,22 @@ public class EMuleKadModule extends AbstractModule {
 		com.google.inject.Key<String> key=com.google.inject.Key.get(String.class, Names.named("openkad.keyfactory.keysize"));
 		System.out.println("\n"+injector.getInstance(key));
 	}
+}
+
+class MyThreadFactory implements ThreadFactory{
+	private int i=1;
+	private String name;
+	
+	public MyThreadFactory(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public Thread newThread(Runnable task) {
+		Thread thread=new Thread(task);
+		thread.setName(name+"-"+i);
+		i++;
+		return thread;
+	}
+	
 }
