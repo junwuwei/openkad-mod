@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -59,7 +58,6 @@ import cn.edu.jnu.cs.emulekad.op.PublishOperation;
 import cn.edu.jnu.cs.emulekad.op.SearchOperation;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
@@ -162,7 +160,7 @@ public class EMuleKadModule extends AbstractModule {
 		// network timeouts and concurrency level
 		defaultProps.setProperty("openkad.net.concurrency", "3");
 		defaultProps.setProperty("openkad.net.timeout",
-				TimeUnit.SECONDS.toMillis(3) + "");
+				TimeUnit.SECONDS.toMillis(1) + "");
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
 				TimeUnit.SECONDS.toMillis(300) + "");
 
