@@ -48,6 +48,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private byte requestType = OpCodes.FIND_NODE;
 	private Collection<Node> bootstrap = Collections.emptyList();
 	private boolean gotCachedResult = false;
+	private long costTime;
 
 	// dependencies
 	private final Provider<MessageDispatcher<Node>> msgDispatcherProvider;
@@ -55,6 +56,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private final KBuckets kBuckets;
 	private final Node localNode;
 	private final KadCache cache;
+	private final int keySize;
 	
 	private static Logger logger = LoggerFactory
 			.getLogger(EMuleFindValueOperation.class);
@@ -65,12 +67,14 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 			@Named("openkad.bucket.kbuckets.maxsize") int kBucketSize,
 			Provider<EMuleKadRequest> findNodeRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
-			KBuckets kBuckets, KadCache cache) {
+			KBuckets kBuckets, KadCache cache,
+			@Named("openkad.keyfactory.keysize") int keySize) {
 		this.localNode = localNode;
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
 		this.msgDispatcherProvider = msgDispatcherProvider;
 		this.cache = cache;
+		this.keySize=keySize;
 
 		alreadyQueried = new HashSet<Node>();
 		querying = new HashSet<Node>();
@@ -180,8 +184,9 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		}
 		
 		long endTime = System.currentTimeMillis();
+		costTime = endTime - startTime;
 		logger.info("finished find node,key={}, used {} seconds.", key,
-				TimeUnit.MILLISECONDS.toSeconds(endTime - startTime));
+				TimeUnit.MILLISECONDS.toSeconds(costTime));
 		logger.info("nrQueried={},knownClosestNodes.size()={}", nrQueried,
 				knownClosestNodes.size());
 		
@@ -224,5 +229,14 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	public EMuleFindValueOperation setRequestType(byte requestType) {
 		this.requestType = requestType;
 		return this;
+	}
+	
+	public long getCostTime() {
+		return costTime;
+	}
+
+	public int getLongestCommonPrefixLength() {
+		return keySize * 8 - key.xor(knownClosestNodes.get(0).getKey())
+						.getFirstSetBitIndex() - 1;
 	}
 }

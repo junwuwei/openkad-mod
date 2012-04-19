@@ -20,12 +20,18 @@
 	<appender name="FILE2" class="ch.qos.logback.core.FileAppender">
 		<file>log/findNode2.log</file>
 		<encoder>
-			<pattern>%date %-6level [%thread] %logger{16}[%file:%line] %msg%n
+			<pattern>%msg%n
 			</pattern>
 		</encoder>
 	</appender>
 
 	<logger name="cn.edu.jnu.cs.emulekad.op.EMuleFindNodeOperation"
+		level="info" additivity="false">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	
+	<logger name="cn.edu.jnu.cs.emulekad.op.EMuleFindValueOperation"
 		level="info" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE" />
@@ -48,7 +54,7 @@
 		<appender-ref ref="FILE2" />
 	</logger>
 
-	<root level="off">
+	<root level="info">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>

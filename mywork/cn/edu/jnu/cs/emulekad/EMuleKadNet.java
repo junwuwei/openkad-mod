@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -70,6 +71,7 @@ public class EMuleKadNet implements EMuleKad {
 		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
 		kbr.create();
 	}
+
 	// dependencies
 	private final Provider<MessageDispatcher<Object>> msgDispatcherProvider;
 	private final Provider<EMuleJoinOperation> joinOperationProvider;
@@ -91,9 +93,9 @@ public class EMuleKadNet implements EMuleKad {
 	private final Indexer indexer;
 	private final KeyFactory keyFactory;
 	private final ExecutorService clientExecutor;
-private final int bucketSize;
+	private final int bucketSize;
+	private final Provider<List<Timer>> systemTimersProvider;
 
-	//	private final TimerTask refreshTask;
 	// testing
 	private final List<Integer> findNodeHopsHistogram;
 	// state
@@ -126,6 +128,7 @@ private final int bucketSize;
 			KeyFactory keyFactory,
 			@Named("openkad.executors.client") ExecutorService clientExecutor,
 			@Named("openkad.bucket.kbuckets.maxsize") int bucketSize,
+			@Named("openkad.timers") Provider<List<Timer>> systemTimersProvider,
 			// testing
 			@Named("openkad.testing.findNodeHopsHistogram") List<Integer> findNodeHopsHistogram) {
 
@@ -149,7 +152,7 @@ private final int bucketSize;
 		this.keyFactory = keyFactory;
 		this.clientExecutor = clientExecutor;
 		this.bucketSize = bucketSize;
-//		this.refreshTask = refreshTask;
+		this.systemTimersProvider=systemTimersProvider;
 		// testing
 		this.findNodeHopsHistogram = findNodeHopsHistogram;
 	}
@@ -334,6 +337,9 @@ private final int bucketSize;
 	@Override
 	public void shutdown() {
 		kadServer.shutdown(kadServerThread);
+		for(Timer timer:systemTimersProvider.get()){
+			timer.cancel();
+		}
 		logger.info("EMuleKadNet shutdowned.");
 	}
 

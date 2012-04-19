@@ -107,6 +107,7 @@ public class KadServer implements Runnable {
 
 		ByteArrayOutputStream bout = null;
 		try {
+//			long startTime=System.currentTimeMillis();
 			bout = new ByteArrayOutputStream();
 			serializer.write(msg, bout);
 			byte[] bytes = bout.toByteArray();
@@ -115,7 +116,10 @@ public class KadServer implements Runnable {
 
 			pkt.setSocketAddress(to.getSocketAddress(kadScheme));
 			logger.debug("sending packet to {}", pkt.getSocketAddress());
+			
 			sockProvider.get().send(pkt);
+//			long endTime=System.currentTimeMillis();
+//			System.out.println("send packet costtime="+(endTime-startTime)/1000.0);
 		} finally {
 			try {
 				bout.close();

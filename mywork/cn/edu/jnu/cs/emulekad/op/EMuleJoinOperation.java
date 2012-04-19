@@ -85,7 +85,8 @@ public class EMuleJoinOperation {
 			@Named("openkad.refresh.enable") boolean enableRefreshTash,
 			@Named("openkad.refresh.first_delay") long refreshFirstDelay,
 			@Named("openkad.refresh.interval") long refreshInterval,
-			@Named("openkad.refresh.task") TimerTask refreshTask) {
+			@Named("openkad.refresh.task") TimerTask refreshTask,
+			@Named("openkad.refresh.timer")Timer timer) {
 
 		this.bootstrapOperationProvider = bootstrapOperationProvider;
 		this.kadNodeProvider = kadNodeProvider;
@@ -99,7 +100,7 @@ public class EMuleJoinOperation {
 		this.pingBeforeInsertNode = pingBeforeInsertNode;
 		this.doRandomFindNode = doRandomFindNode;
 		this.localNode = localNode;
-		this.timer = new Timer("FindNodeRefreshTaskTimer",true);
+		this.timer = timer;
 		this.enableRefreshTash = enableRefreshTash;
 		this.refreshFirstDelay = refreshFirstDelay;
 		this.refreshInterval = refreshInterval;

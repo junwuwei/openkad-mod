@@ -26,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -35,6 +36,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +97,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.nodes.file.path", "nodes.dat");
 
 		// find node
-		defaultProps.setProperty("openkad.findnode.response.max_nodes", "10");
+		defaultProps.setProperty("openkad.findnode.response.max_nodes", "11");
 		defaultProps.setProperty("openkad.findvalue.response.max_nodes", "2");
 		defaultProps.setProperty("openkad.store.response.max_nodes", "4");
 
@@ -135,20 +137,20 @@ public class EMuleKadModule extends AbstractModule {
 		// performance params
 
 		// handling incoming messages
-		defaultProps.setProperty("openkad.executors.server.nrthreads", "20");
-		defaultProps.setProperty("openkad.executors.server.max_pending", "1");
+		defaultProps.setProperty("openkad.executors.server.nrthreads", "40");
+		defaultProps.setProperty("openkad.executors.server.max_pending", "128");
 		// handling registered callback
 		defaultProps.setProperty("openkad.executors.client.nrthreads", "2");
-		defaultProps.setProperty("openkad.executors.client.max_pending", "1");
+		defaultProps.setProperty("openkad.executors.client.max_pending", "128");
 		
 		// forwarding find node requests
 		//eMuleKad不需用到
 		defaultProps.setProperty("openkad.executors.forward.nrthreads", "2");
-		defaultProps.setProperty("openkad.executors.forward.max_pending", "2");
+		defaultProps.setProperty("openkad.executors.forward.max_pending", "128");
 		// executing the long find node operations
 		//eMuleKad不需用到
 		defaultProps.setProperty("openkad.executors.op.nrthreads", "1");
-		defaultProps.setProperty("openkad.executors.op.max_pending", "2");
+		defaultProps.setProperty("openkad.executors.op.max_pending", "128");
 		
 		// sending back pings
 		defaultProps.setProperty("openkad.executors.ping.nrthreads", "1");
@@ -161,8 +163,9 @@ public class EMuleKadModule extends AbstractModule {
 		// minimum time between successive pings
 		defaultProps.setProperty("openkad.bucket.valid_timespan",
 				TimeUnit.MINUTES.toMillis(10) + "");
+		
 		// network timeouts and concurrency level
-		defaultProps.setProperty("openkad.net.concurrency", "3");
+		defaultProps.setProperty("openkad.net.concurrency", "50");
 		defaultProps.setProperty("openkad.net.timeout",
 				TimeUnit.SECONDS.toMillis(1) + "");
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
@@ -260,20 +263,54 @@ public class EMuleKadModule extends AbstractModule {
 
 	@Provides
 	@Singleton
+	@Named("openkad.timers")
+	List<Timer> systemTimers(@Named("openkad.timerpool.size") int poolSize){
+		return new LinkedList<Timer>();
+	}
+	
+	@Provides
+	@Singleton
 	@Named("openkad.timerpool")
-	Pool<Timer> provideTimerpool(@Named("openkad.timerpool.size") int poolSize){
+	Pool<Timer> provideTimerpool(@Named("openkad.timerpool.size") int poolSize,@Named("openkad.timers")List<Timer> systemTimers){
 		Pool<Timer> pool= new Pool<Timer>(poolSize);
 		for (int i = 0; i < poolSize; i++) {
-			pool.add(new Timer("TimeoutTimer"+i,true));
+			Timer timer=new Timer("TimeoutTimer"+i,true);
+			pool.add(timer);
+			systemTimers.add(timer);
 		}
 		return pool;
 	}
 	
 	@Provides
 	@Named("openkad.timer")
-	Timer provideTimer(@Named("openkad.timerpool") Pool<Timer> timerpool){
+	Timer provideMessageDespatcherTimer(
+			@Named("openkad.timerpool") Pool<Timer> timerpool,
+			@Named("openkad.timers")List<Timer> systemTimers){
 		return timerpool.get();
+//		Timer timer=new Timer("TimeoutTimer",true);
+//		systemTimers.add(timer);
+//		return timer;
 	}
+	
+	@Provides
+	@Singleton
+	@Named("openkad.index.timer")
+	Timer provideIndexTimer(@Named("openkad.timers")List<Timer> systemTimers){
+		Timer timer=new Timer("IndexerCleanTaskTimer",true);
+		systemTimers.add(timer);
+		return timer;
+	}
+	
+	@Provides
+	@Singleton
+	@Named("openkad.refresh.timer")
+	Timer provideRefreshTimer(@Named("openkad.timers")List<Timer> systemTimers){
+		Timer timer = new Timer("FindNodeRefreshTaskTimer",true);
+		systemTimers.add(timer);
+		return timer;
+	}
+	
+	
 
 	@Provides
 	@Named("openkad.bucket.kbuckets")
@@ -393,6 +430,7 @@ public class EMuleKadModule extends AbstractModule {
 	BlockingQueue<MessageDispatcher<?>> provideOutstandingRequestsQueue(
 			@Named("openkad.net.concurrency") int concurrency) {
 		return new ArrayBlockingQueue<MessageDispatcher<?>>(concurrency, true);
+//		return new LinkedBlockingQueue<MessageDispatcher<?>>();
 	}
 
 	@Provides
