@@ -1,0 +1,20 @@
+timeout=1000
+Type=NOTE, average publish costTime=3.479 seconds, nrCompleted=1.940, search costTime=6.947 seconds.
+Type=SOURCE, average publish costTime=3.756 seconds, nrCompleted=1.100, search costTime=7.492 seconds.
+Type=KEYWORD, average publish costTime=3.625 seconds, nrCompleted=1.010, search costTime=7.376 seconds.
+timeout=2000
+Type=NOTE, average publish costTime=6.512 seconds, nrCompleted=1.860, search costTime=13.316 seconds.
+Type=SOURCE, average publish costTime=6.446 seconds, nrCompleted=1.990, search costTime=13.257 seconds.
+Type=KEYWORD, average publish costTime=6.034 seconds, nrCompleted=2.260, search costTime=12.742 seconds.
+timeout=3000
+Type=NOTE, average publish costTime=8.774 seconds, nrCompleted=2.690, search costTime=18.240 seconds.
+Type=SOURCE, average publish costTime=8.743 seconds, nrCompleted=2.700, search costTime=18.261 seconds.
+Type=KEYWORD, average publish costTime=8.335 seconds, nrCompleted=2.830, search costTime=17.750 seconds.
+timeout=4000
+Type=NOTE, average publish costTime=11.604 seconds, nrCompleted=2.730, search costTime=24.281 seconds.
+Type=SOURCE, average publish costTime=11.190 seconds, nrCompleted=2.910, search costTime=23.513 seconds.
+Type=KEYWORD, average publish costTime=11.209 seconds, nrCompleted=2.820, search costTime=23.755 seconds.
+timeout=5000
+Type=NOTE, average publish costTime=14.298 seconds, nrCompleted=2.660, search costTime=29.984 seconds.
+Type=SOURCE, average publish costTime=14.306 seconds, nrCompleted=2.640, search costTime=30.096 seconds.
+Type=KEYWORD, average publish costTime=13.907 seconds, nrCompleted=2.730, search costTime=29.688 seconds.

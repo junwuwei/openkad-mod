@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
@@ -82,7 +81,6 @@ public class KadNet implements KeybasedRouting {
 			Provider<PingHandler> pingHandler,
 			Provider<StoreHandler> storeHandlerProvider,
 			Provider<ForwardHandler> forwardHandlerProvider,
-//			@Named("openkad.timer") Timer timer,
 			
 			@Named("openkad.local.node") Node localNode,
 			KadServer kadServer,

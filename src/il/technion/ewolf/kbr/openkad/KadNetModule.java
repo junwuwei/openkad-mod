@@ -138,7 +138,7 @@ public class KadNetModule extends AbstractModule {
 		
 		bind(Timer.class)
 			.annotatedWith(Names.named("openkad.timer"))
-			.toInstance(new Timer());
+			.toInstance(new Timer(true));
 
 		// bind requests
 		bind(PingRequest.class);

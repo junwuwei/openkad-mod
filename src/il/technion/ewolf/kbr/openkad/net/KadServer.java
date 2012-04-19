@@ -114,7 +114,7 @@ public class KadServer implements Runnable {
 			DatagramPacket pkt = new DatagramPacket(bytes, 0, bytes.length);
 
 			pkt.setSocketAddress(to.getSocketAddress(kadScheme));
-			logger.info("sending packet to {}", pkt.getSocketAddress());
+			logger.debug("sending packet to {}", pkt.getSocketAddress());
 			sockProvider.get().send(pkt);
 		} finally {
 			try {
@@ -183,7 +183,7 @@ public class KadServer implements Runnable {
 			try {
 				pkt = new DatagramPacket(new byte[1024 * 64], 1024 * 64);// pkts.take();
 				sockProvider.get().receive(pkt);
-				logger.info("receiving packet from {}", pkt.getSocketAddress());
+				logger.debug("receiving packet from {}", pkt.getSocketAddress());
 				handleIncomingPacket(pkt);
 			} catch (Exception e) {
 				// insert the taken pkt back

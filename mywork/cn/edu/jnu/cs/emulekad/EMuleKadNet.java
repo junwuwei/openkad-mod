@@ -64,6 +64,12 @@ import il.technion.ewolf.kbr.openkad.op.FindValueOperation;
  */
 public class EMuleKadNet implements EMuleKad {
 
+	public static void main(String[] args) throws Exception {
+		Injector injector = Guice.createInjector(new KadNetModule()
+				.setProperty("openkad.net.udp.port", "5555"));
+		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
+		kbr.create();
+	}
 	// dependencies
 	private final Provider<MessageDispatcher<Object>> msgDispatcherProvider;
 	private final Provider<EMuleJoinOperation> joinOperationProvider;
@@ -77,22 +83,23 @@ public class EMuleKadNet implements EMuleKad {
 	private final Provider<BootstrapHandler> BootStrapHandlerProvider;
 	private final Provider<EMuleKadRequestHandler> eMuleKadRequestHandlerProvider;
 	private final Provider<SearchHandler> searchHandlerProvider;
-	private final Provider<PublishHandler> publishHandlerProvider;
 
+	private final Provider<PublishHandler> publishHandlerProvider;
 	private final Node localNode;
 	private final KadServer kadServer;
 	private final KBuckets kBuckets;
 	private final Indexer indexer;
 	private final KeyFactory keyFactory;
 	private final ExecutorService clientExecutor;
-	private final int bucketSize;
-//	private final TimerTask refreshTask;
+private final int bucketSize;
+
+	//	private final TimerTask refreshTask;
 	// testing
 	private final List<Integer> findNodeHopsHistogram;
-
 	// state
 	private final Map<String, MessageDispatcher<?>> dispatcherFromTag = new HashMap<String, MessageDispatcher<?>>();
 	private Thread kadServerThread = null;
+
 	private boolean isCreated = false;
 
 	private static Logger logger = LoggerFactory.getLogger(EMuleKadNet.class);
@@ -112,8 +119,6 @@ public class EMuleKadNet implements EMuleKad {
 			Provider<BootstrapHandler> BootStrapHandlerProvider,
 			Provider<SearchHandler> searchHandlerProvider,
 			Provider<PublishHandler> publishHandlerProvider,
-//			@Named("openkad.timer") Timer timer,
-
 			@Named("openkad.local.node") Node localNode,
 			KadServer kadServer,
 			KBuckets kBuckets,
@@ -121,8 +126,6 @@ public class EMuleKadNet implements EMuleKad {
 			KeyFactory keyFactory,
 			@Named("openkad.executors.client") ExecutorService clientExecutor,
 			@Named("openkad.bucket.kbuckets.maxsize") int bucketSize,
-//			@Named("openkad.refresh.task") TimerTask refreshTask,
-
 			// testing
 			@Named("openkad.testing.findNodeHopsHistogram") List<Integer> findNodeHopsHistogram) {
 
@@ -174,11 +177,6 @@ public class EMuleKadNet implements EMuleKad {
 	}
 
 	@Override
-	public void joinURI(Collection<URI> bootstraps) {
-		joinOperationProvider.get().addBootstrapURI(bootstraps).doJoin();
-	}
-
-	@Override
 	public List<Node> findNode(Key k) {
 		FindValueOperation op = findValueOperationProvider.get().setKey(k);
 
@@ -199,18 +197,45 @@ public class EMuleKadNet implements EMuleKad {
 	}
 
 	@Override
-	public List<Node> getNeighbours() {
-		return kBuckets.getAllNodes();
-	}
-
-	@Override
 	public Node getLocalNode() {
 		return localNode;
 	}
 
 	@Override
-	public String toString() {
-		return localNode.toString() + "\n" + kBuckets.toString();
+	public List<Node> getNeighbours() {
+		return kBuckets.getAllNodes();
+	}
+
+	@Override
+	public void joinNode(Collection<Node> bootstraps) {
+		joinOperationProvider.get().addBootstrapNode(bootstraps).doJoin();
+
+	}
+
+	@Override
+	public void joinURI(Collection<URI> bootstraps) {
+		joinOperationProvider.get().addBootstrapURI(bootstraps).doJoin();
+	}
+
+	@Override
+	public int publishKeyword(Key targetKey, List<Entry> entries) {
+		return publishOperationProvider.get().setTargetKey(targetKey)
+				.setEntries(entries)
+				.setPublishType(PublishAndSearchType.KEYWORD).doPublish();
+	}
+
+	@Override
+	public int publishNote(Key targetKey, Entry entry) {
+		return publishOperationProvider.get().setTargetKey(targetKey)
+				.addEntry(entry).setPublishType(PublishAndSearchType.NOTE)
+				.doPublish();
+	}
+
+	@Override
+	public int publishSource(Key targetKey, Entry entry) {
+		return publishOperationProvider.get().setTargetKey(targetKey)
+				.addEntry(entry).setPublishType(PublishAndSearchType.SOURCE)
+				.doPublish();
 	}
 
 	@Override
@@ -229,6 +254,24 @@ public class EMuleKadNet implements EMuleKad {
 								.setHandler(handler).setTag(tag)).register();
 
 		dispatcherFromTag.put(tag, dispatcher);
+	}
+
+	@Override
+	public List<Entry> searchKeyword(Key targetKey) {
+		return searchOperationProvider.get().setTargetKey(targetKey)
+				.setSearchType(PublishAndSearchType.KEYWORD).doSearch();
+	}
+
+	@Override
+	public List<Entry> searchNote(Key targetKey) {
+		return searchOperationProvider.get().setTargetKey(targetKey)
+				.setSearchType(PublishAndSearchType.NOTE).doSearch();
+	}
+
+	@Override
+	public List<Entry> searchSource(Key targetKey) {
+		return searchOperationProvider.get().setTargetKey(targetKey)
+				.setSearchType(PublishAndSearchType.SOURCE).doSearch();
 	}
 
 	@Override
@@ -288,63 +331,15 @@ public class EMuleKadNet implements EMuleKad {
 				}).send(to, contentRequest);
 	}
 
-	public static void main(String[] args) throws Exception {
-		Injector injector = Guice.createInjector(new KadNetModule()
-				.setProperty("openkad.net.udp.port", "5555"));
-		KeybasedRouting kbr = injector.getInstance(KeybasedRouting.class);
-		kbr.create();
-	}
-
 	@Override
 	public void shutdown() {
-//		refreshTask.cancel();
 		kadServer.shutdown(kadServerThread);
 		logger.info("EMuleKadNet shutdowned.");
 	}
 
 	@Override
-	public void joinNode(Collection<Node> bootstraps) {
-		joinOperationProvider.get().addBootstrapNode(bootstraps).doJoin();
-
-	}
-
-	@Override
-	public int publishSource(Key targetKey, Entry entry) {
-		return publishOperationProvider.get().setTargetKey(targetKey)
-				.addEntry(entry).setPublishType(PublishAndSearchType.SOURCE)
-				.doPublish();
-	}
-
-	@Override
-	public int publishNote(Key targetKey, Entry entry) {
-		return publishOperationProvider.get().setTargetKey(targetKey)
-				.addEntry(entry).setPublishType(PublishAndSearchType.NOTE)
-				.doPublish();
-	}
-
-	@Override
-	public int publishKeyword(Key targetKey, List<Entry> entries) {
-		return publishOperationProvider.get().setTargetKey(targetKey)
-				.setEntries(entries)
-				.setPublishType(PublishAndSearchType.KEYWORD).doPublish();
-	}
-
-	@Override
-	public List<Entry> searchSource(Key targetKey) {
-		return searchOperationProvider.get().setTargetKey(targetKey)
-				.setSearchType(PublishAndSearchType.SOURCE).doSearch();
-	}
-
-	@Override
-	public List<Entry> searchNote(Key targetKey) {
-		return searchOperationProvider.get().setTargetKey(targetKey)
-				.setSearchType(PublishAndSearchType.NOTE).doSearch();
-	}
-
-	@Override
-	public List<Entry> searchKeyword(Key targetKey) {
-		return searchOperationProvider.get().setTargetKey(targetKey)
-				.setSearchType(PublishAndSearchType.KEYWORD).doSearch();
+	public String toString() {
+		return localNode.toString() + "\n" + kBuckets.toString();
 	}
 
 }

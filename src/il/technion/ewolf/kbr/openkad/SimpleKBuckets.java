@@ -17,13 +17,6 @@ import il.technion.ewolf.kbr.openkad.msg.PingResponse;
 import il.technion.ewolf.kbr.openkad.net.MessageDispatcher;
 import il.technion.ewolf.kbr.openkad.net.filter.SrcExcluderMessageFilter;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeExcluderMessageFilter;
-import cn.edu.jnu.cs.emulekad.msg.BootstrapRequest;
-import cn.edu.jnu.cs.emulekad.msg.EMuleKadResponse;
-import cn.edu.jnu.cs.emulekad.msg.EMuleKadRequest;
-import cn.edu.jnu.cs.emulekad.msg.SearchRequest;
-import cn.edu.jnu.cs.emulekad.msg.PublishResponse;
-import cn.edu.jnu.cs.emulekad.msg.UnknownMessage;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -105,12 +98,6 @@ public class SimpleKBuckets implements KBuckets {
 			.setConsumable(false)
 			// do not add PingResponse since it might create a loop
 			.addFilter(new TypeExcluderMessageFilter(PingResponse.class))
-			.addFilter(new TypeExcluderMessageFilter(BootstrapRequest.class))
-			.addFilter(new TypeExcluderMessageFilter(EMuleKadRequest.class))
-			.addFilter(new TypeExcluderMessageFilter(EMuleKadResponse.class))
-			.addFilter(new TypeExcluderMessageFilter(SearchRequest.class))
-			.addFilter(new TypeExcluderMessageFilter(PublishResponse.class))
-			.addFilter(new TypeExcluderMessageFilter(UnknownMessage.class))
 			.addFilter(new SrcExcluderMessageFilter(localNode))
 			
 			.setCallback(null, new CompletionHandler<KadMessage, Object>() {

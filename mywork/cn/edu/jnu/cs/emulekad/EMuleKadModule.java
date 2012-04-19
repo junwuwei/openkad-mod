@@ -95,7 +95,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.nodes.file.path", "nodes.dat");
 
 		// find node
-		defaultProps.setProperty("openkad.findnode.response.max_nodes", "11");
+		defaultProps.setProperty("openkad.findnode.response.max_nodes", "10");
 		defaultProps.setProperty("openkad.findvalue.response.max_nodes", "2");
 		defaultProps.setProperty("openkad.store.response.max_nodes", "4");
 
@@ -135,17 +135,21 @@ public class EMuleKadModule extends AbstractModule {
 		// performance params
 
 		// handling incoming messages
-		defaultProps.setProperty("openkad.executors.server.nrthreads", "8");
-		defaultProps.setProperty("openkad.executors.server.max_pending", "128");
+		defaultProps.setProperty("openkad.executors.server.nrthreads", "20");
+		defaultProps.setProperty("openkad.executors.server.max_pending", "1");
 		// handling registered callback
-		defaultProps.setProperty("openkad.executors.client.nrthreads", "8");
-		defaultProps.setProperty("openkad.executors.client.max_pending", "128");
+		defaultProps.setProperty("openkad.executors.client.nrthreads", "2");
+		defaultProps.setProperty("openkad.executors.client.max_pending", "1");
+		
 		// forwarding find node requests
+		//eMuleKad不需用到
 		defaultProps.setProperty("openkad.executors.forward.nrthreads", "2");
 		defaultProps.setProperty("openkad.executors.forward.max_pending", "2");
 		// executing the long find node operations
+		//eMuleKad不需用到
 		defaultProps.setProperty("openkad.executors.op.nrthreads", "1");
 		defaultProps.setProperty("openkad.executors.op.max_pending", "2");
+		
 		// sending back pings
 		defaultProps.setProperty("openkad.executors.ping.nrthreads", "1");
 		defaultProps.setProperty("openkad.executors.ping.max_pending", "16");
@@ -164,14 +168,13 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
 				TimeUnit.SECONDS.toMillis(300) + "");
 
+		//eMuleKad不需用到
 		defaultProps.setProperty("openkad.color.candidates", "1");
 		defaultProps.setProperty("openkad.color.slack.size", "1");
 		defaultProps.setProperty("openkad.color.allcolors", "95");
 
 		// timer thread
-		defaultProps.setProperty("openkad.timer.is_daemon", true + "");
-		// defaultProps.setProperty("openkad.timerpool.size", "20");
-		// defaultProps.setProperty("openkad.timer.is_daemon", false+"");
+		 defaultProps.setProperty("openkad.timerpool.size", "10");
 
 		// local configuration, please touch
 		defaultProps.setProperty("openkad.net.udp.port", "10086");
@@ -256,14 +259,20 @@ public class EMuleKadModule extends AbstractModule {
 	}
 
 	@Provides
+	@Singleton
+	@Named("openkad.timerpool")
+	Pool<Timer> provideTimerpool(@Named("openkad.timerpool.size") int poolSize){
+		Pool<Timer> pool= new Pool<Timer>(poolSize);
+		for (int i = 0; i < poolSize; i++) {
+			pool.add(new Timer("TimeoutTimer"+i,true));
+		}
+		return pool;
+	}
+	
+	@Provides
 	@Named("openkad.timer")
-	Timer provideTimer(@Named("openkad.timer.is_daemon") boolean isDaemon,
-	// @Named("openkad.timerpool.size") int poolSize,
-			@Named("openkad.rnd") Random rnd) {
-		// if(poolSize < 1){
-		// return new Timer(isDaemon);
-		// }
-		return new Timer(isDaemon);
+	Timer provideTimer(@Named("openkad.timerpool") Pool<Timer> timerpool){
+		return timerpool.get();
 	}
 
 	@Provides
@@ -322,13 +331,18 @@ public class EMuleKadModule extends AbstractModule {
 		return new DatagramSocket(localNode.getPort(kadScheme));
 	}
 
+	//处理接收到的数据包的线程池
 	@Provides
 	@Named("openkad.executors.server")
 	@Singleton
 	ExecutorService provideServerExecutor(
 			@Named("openkad.executors.server.nrthreads") int nrThreads,
 			@Named("openkad.executors.server.max_pending") int maxPending) {
-		return new ThreadPoolExecutor(1, nrThreads, 5, TimeUnit.MINUTES,
+		int n=(int) (0.5*nrThreads);
+		if(n==0){
+			n=1;
+		}
+		return new ThreadPoolExecutor(n, nrThreads, 5, TimeUnit.MINUTES,
 				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("ServerExecutors"));
 	}
 
@@ -362,6 +376,7 @@ public class EMuleKadModule extends AbstractModule {
 				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("OperationExecutors"));
 	}
 
+	//用于运行发送ContentRequst后的callback
 	@Provides
 	@Named("openkad.executors.client")
 	@Singleton
@@ -600,6 +615,18 @@ class MyThreadFactory implements ThreadFactory{
 		thread.setName(name+"-"+i);
 		i++;
 		return thread;
+	}	
+}
+
+
+class Pool<T> extends ArrayList<T>{
+	private static final long serialVersionUID = 5889518818808780040L;
+	private Random rnd=new Random();
+	public Pool(int capacity){
+		super(capacity);
 	}
 	
+	public T get(){
+		return get(rnd.nextInt(this.size()));
+	}
 }

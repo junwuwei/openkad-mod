@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,12 +22,10 @@ import il.technion.ewolf.kbr.openkad.KBuckets;
 import il.technion.ewolf.kbr.openkad.net.KadServer;
 
 import org.apache.commons.codec.DecoderException;
-import org.jmule.core.edonkey.packet.tag.BSOBTag;
 import org.jmule.core.edonkey.packet.tag.ByteTag;
 import org.jmule.core.edonkey.packet.tag.IntTag;
 import org.jmule.core.edonkey.packet.tag.LongTag;
 import org.jmule.core.edonkey.packet.tag.ShortTag;
-import org.jmule.core.edonkey.packet.tag.StringTag;
 import org.jmule.core.edonkey.packet.tag.Tag;
 import org.jmule.core.edonkey.packet.tag.TagList;
 import org.junit.Test;
@@ -170,11 +167,11 @@ public class EMuleKadTest {
 		Injector injector = Guice
 				.createInjector(new EMuleKadModule()
 						.setProperty("openkad.need_bootstrap.minsize", "20")
-						.setProperty("openkad.refresh.enable", false + "")
+						.setProperty("openkad.refresh.enable", true + "")
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
-								false + "")
+								true + "")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
-								false + "")
+								true + "")
 				// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10)
 				// +
 				// "")

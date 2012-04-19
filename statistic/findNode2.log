@@ -1,0 +1,25 @@
+2012-04-07 09:26:15,390 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:119] 
+timeout=1000
+2012-04-07 09:36:52,452 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:121] requestType=FIND_NODE, average costTime=5.930 seconds, nrQueried=21.450, longestCommonProfixLength=19.690
+2012-04-07 09:46:24,187 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:124] requestType=STORE, average costTime=5.250 seconds, nrQueried=19.430, longestCommonProfixLength=19.420
+2012-04-07 09:54:11,984 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:127] requestType=FIND_VALUE, average costTime=4.250 seconds, nrQueried=15.130, longestCommonProfixLength=18.650
+2012-04-07 09:54:26,265 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:119] 
+timeout=2000
+2012-04-07 10:13:23,609 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:121] requestType=FIND_NODE, average costTime=10.880 seconds, nrQueried=21.170, longestCommonProfixLength=19.780
+2012-04-07 10:30:28,249 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:124] requestType=STORE, average costTime=9.750 seconds, nrQueried=20.010, longestCommonProfixLength=20.230
+2012-04-07 10:43:40,562 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:127] requestType=FIND_VALUE, average costTime=7.400 seconds, nrQueried=14.300, longestCommonProfixLength=18.490
+2012-04-07 10:43:55,124 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:119] 
+timeout=3000
+2012-04-07 11:09:38,671 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:121] requestType=FIND_NODE, average costTime=15.030 seconds, nrQueried=20.380, longestCommonProfixLength=19.610
+2012-04-07 11:31:43,499 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:124] requestType=STORE, average costTime=12.800 seconds, nrQueried=18.290, longestCommonProfixLength=19.800
+2012-04-07 11:50:13,874 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:127] requestType=FIND_VALUE, average costTime=10.640 seconds, nrQueried=14.450, longestCommonProfixLength=17.670
+2012-04-07 11:50:28,030 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:119] 
+timeout=4000
+2012-04-07 12:24:19,515 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:121] requestType=FIND_NODE, average costTime=19.840 seconds, nrQueried=20.150, longestCommonProfixLength=19.290
+2012-04-07 12:55:29,046 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:124] requestType=STORE, average costTime=18.370 seconds, nrQueried=17.870, longestCommonProfixLength=17.840
+2012-04-07 13:19:25,468 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:127] requestType=FIND_VALUE, average costTime=14.110 seconds, nrQueried=11.890, longestCommonProfixLength=13.810
+2012-04-07 13:19:39,530 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:119] 
+timeout=5000
+2012-04-07 14:07:07,296 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:121] requestType=FIND_NODE, average costTime=28.130 seconds, nrQueried=20.990, longestCommonProfixLength=18.300
+2012-04-07 14:45:13,515 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:124] requestType=STORE, average costTime=22.520 seconds, nrQueried=17.560, longestCommonProfixLength=17.380
+2012-04-07 15:15:21,343 INFO   [main] c.e.j.c.e.FindNodeMeasurement2[FindNodeMeasurement2.java:127] requestType=FIND_VALUE, average costTime=17.700 seconds, nrQueried=14.720, longestCommonProfixLength=18.240

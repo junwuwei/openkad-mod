@@ -248,6 +248,6 @@ public class EMuleFindNodeOperation implements
 
 	public int getLongestCommonPrefixLength() {
 		return keySize * 8 - key.xor(knownClosestNodes.get(0).getKey())
-						.getFirstSetBitIndex();
+						.getFirstSetBitIndex() - 1;
 	}
 }

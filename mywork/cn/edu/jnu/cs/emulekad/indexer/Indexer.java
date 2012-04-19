@@ -51,7 +51,6 @@ public class Indexer {
 			@Named("openkad.index.note.publish.timespan") long NOTE_PUBLISH_TIMESPAN,
 			@Named("openkad.index.cleantask.first_delay") long cleanTaskFirstDelay,
 			@Named("openkad.index.cleantask.interval") long cleanTaskInterval){
-//			@Named("openkad.timer") Timer timer) {
 
 		this.MAX_SOURCE_PER_FILE = MAX_SOURCE_PER_FILE;
 		this.MAX_NOTE_PER_FILE = MAX_NOTE_PER_FILE;
@@ -62,7 +61,6 @@ public class Indexer {
 		this.NOTE_PUBLISH_TIMESPAN = NOTE_PUBLISH_TIMESPAN;
 		this.cleanTaskFirstDelay = cleanTaskInterval;
 		this.cleanTaskInterval = cleanTaskInterval;
-//		this.timer = timer;
 		this.timer=new Timer("IndexerCleanTaskTimer",true);
 	}
 
