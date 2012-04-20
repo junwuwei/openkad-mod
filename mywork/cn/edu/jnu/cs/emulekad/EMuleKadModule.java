@@ -140,7 +140,7 @@ public class EMuleKadModule extends AbstractModule {
 		// performance params
 
 		// handling incoming messages
-		defaultProps.setProperty("openkad.executors.server.nrthreads", "40");
+		defaultProps.setProperty("openkad.executors.server.nrthreads", "10");
 		defaultProps.setProperty("openkad.executors.server.max_pending", "128");
 		// handling registered callback
 		defaultProps.setProperty("openkad.executors.client.nrthreads", "2");
@@ -162,7 +162,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.findnode.usecache",true + "");
 		defaultProps.setProperty("openkad.cache.validtime",
 				TimeUnit.HOURS.toMillis(10) + "");
-		defaultProps.setProperty("openkad.cache.size", "100");
+		defaultProps.setProperty("openkad.cache.size", "1000");
 		defaultProps.setProperty("openkad.cache.share", "1");
 		// minimum time between successive pings
 		defaultProps.setProperty("openkad.bucket.valid_timespan",
@@ -181,7 +181,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.color.allcolors", "95");
 
 		// timer thread
-		 defaultProps.setProperty("openkad.timerpool.size", "10");
+		 defaultProps.setProperty("openkad.timerpool.size", "2");
 
 		// local configuration, please touch
 		defaultProps.setProperty("openkad.net.udp.port", "10086");
