@@ -19,6 +19,7 @@ import il.technion.ewolf.kbr.Key;
 import il.technion.ewolf.kbr.KeyFactory;
 import il.technion.ewolf.kbr.Node;
 import il.technion.ewolf.kbr.openkad.KBuckets;
+import il.technion.ewolf.kbr.openkad.msg.PingRequest;
 import il.technion.ewolf.kbr.openkad.net.KadServer;
 
 import org.apache.commons.codec.DecoderException;
@@ -52,10 +53,11 @@ public class EMuleKadTest {
 	private void joinNetwordByBootstrapFromKnownEMuleClient(EMuleKad eMuleKad)
 			throws URISyntaxException {
 		int basePort = 4662;
-		 String ip = "219.222.18.218";
+//		 String ip = "219.222.18.218";
 //		 String ip = "219.222.19.140";
-//		String ip = "219.222.18.234";
+		String ip = "219.222.18.234";
 //		String ip = "127.0.0.1";
+//		String ip = "192.168.1.100";
 		long stratTime = System.currentTimeMillis();
 		eMuleKad.joinURI(Arrays.asList(new URI("openkad.udp://" + ip + ":"
 				+ basePort + "/")));
@@ -167,11 +169,13 @@ public class EMuleKadTest {
 		Injector injector = Guice
 				.createInjector(new EMuleKadModule()
 						.setProperty("openkad.need_bootstrap.minsize", "20")
-						.setProperty("openkad.refresh.enable", true + "")
+						.setProperty("openkad.refresh.enable", false + "")
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
-								true + "")
+								false + "")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
 								true + "")
+						.setProperty("openkad.net.concurrency", "200")
+						.setProperty("openkad.net.timeout",TimeUnit.SECONDS.toMillis(1) + "")
 				// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10)
 				// +
 				// "")
@@ -182,7 +186,9 @@ public class EMuleKadTest {
 		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
 		eMuleKad.create();
 
-		joinNetwordByLoadNodeDatFile(eMuleKad, injector);
+		for(int i=0;i<1;i++){
+			joinNetwordByLoadNodeDatFile(eMuleKad, injector);
+		}
 		
 		KBuckets kBuckets=injector.getInstance(KBuckets.class);
 		
@@ -300,8 +306,8 @@ public class EMuleKadTest {
 				+ eMuleKad.getLocalNode().getKey().toHexString());
 		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
 
-//		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
-		 joinNetwordByLoadNodeDatFile(eMuleKad,injector);
+		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+//		 joinNetwordByLoadNodeDatFile(eMuleKad,injector);
 
 		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
 				+ " nodes.");
@@ -314,6 +320,41 @@ public class EMuleKadTest {
 				.setRequestType(OpCodes.STORE);
 //		.setRequestType(OpCodes.FIND_NODE);
 //		.setRequestType(OpCodes.FIND_VALUE);
+		KadServer server = injector.getInstance(KadServer.class);
+		server.send(to, res);
+		eMuleKad.shutdown();
+	}
+	@Test
+	public void pingTest() throws IOException, URISyntaxException {
+		Injector injector = Guice.createInjector(new EMuleKadModule()
+		.setProperty("openkad.refresh.enable", false + "")
+		.setProperty("openkad.bootstrap.do_rendom_findnode", false + "")
+		.setProperty("openkad.bootstrap.ping_befor_insert",
+								false + "")
+		.setProperty("openkad.net.timeout",
+										TimeUnit.SECONDS.toMillis(3) + "")
+		.setProperty("openkad.need_bootstrap.minsize", "200")
+		// .setProperty("openkad.net.timeout",TimeUnit.MINUTES.toMillis(10) +
+		// "")
+				);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+		System.out.println("local node key:"
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
+		eMuleKad.create();
+		System.out.println("local node key:"
+				+ eMuleKad.getLocalNode().getKey().toHexString());
+		System.out.println("local ip:" + eMuleKad.getLocalNode().getInetAddress());
+		
+		joinNetwordByBootstrapFromKnownEMuleClient(eMuleKad);
+//		joinNetwordByLoadNodeDatFile(eMuleKad,injector);
+		
+		System.out.println("kBuckets has " + eMuleKad.getNeighbours().size()
+				+ " nodes.");
+		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
+		Node to = provideOneEmuleNode(keyFactory);
+		
+		PingRequest res=new PingRequest(System.currentTimeMillis(),eMuleKad.getLocalNode());
 		KadServer server = injector.getInstance(KadServer.class);
 		server.send(to, res);
 		eMuleKad.shutdown();

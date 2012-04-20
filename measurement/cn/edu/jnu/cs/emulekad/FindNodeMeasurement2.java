@@ -41,7 +41,7 @@ public class FindNodeMeasurement2 {
 				.createInjector(new EMuleKadModule()
 						.setProperty("openkad.refresh.enable", false + "")
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
-								true + "")
+								false + "")
 						.setProperty("openkad.net.udp.port", "10000")
 						.setProperty("openkad.net.timeout", timeout + "")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
@@ -149,7 +149,7 @@ public class FindNodeMeasurement2 {
 			e.printStackTrace();
 		}
 		// StatusPrinter.print(lc);
-		int nrFind = 10;
+		int nrFind = 100;
 //		int nrThread=2;
 //		int timeout=1;
 		FindNodeMeasurement2 measurement;
@@ -157,7 +157,7 @@ public class FindNodeMeasurement2 {
 		for (int timeout = 1; timeout <= 10; timeout++) {
 			for (int nrThread = 1; nrThread <= 10; nrThread++) {
 				measurement = new FindNodeMeasurement2(TimeUnit.SECONDS.toMillis(1));
-				logger.info("\ntimeout={}", TimeUnit.SECONDS.toMillis(timeout));
+				logger.info("\n-----------------timeout={}-------------------", TimeUnit.SECONDS.toMillis(timeout));
 				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns1 = measurement.doFindNode(OpCodes.FIND_NODE,
 						nrFind,nrThread);

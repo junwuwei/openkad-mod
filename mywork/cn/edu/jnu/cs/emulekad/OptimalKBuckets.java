@@ -101,7 +101,7 @@ public class OptimalKBuckets implements KBuckets {
 	 */
 	public List<Key> randomKeysForAllBuckets() {
 		List<Key> $ = new ArrayList<Key>();
-		for (int i = 0; i < kbuckets.length; ++i) {
+		for (int i = 0; i < keyFactory.getBitLength(); ++i) {
 			Key key = keyFactory.generate(i).xor(localNode.getKey());
 			$.add(key);
 		}

@@ -36,7 +36,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -81,7 +80,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.keyfactory.keysize", "16");
 		defaultProps.setProperty("openkad.keyfactory.hashalgo", "MD4");
 		defaultProps.setProperty("openkad.bucket.kbuckets.maxsize", "10");
-		defaultProps.setProperty("openkad.bucket.kbuckets.optimal.maxsize", "20");
+		defaultProps.setProperty("openkad.bucket.kbuckets.optimal.maxsize", "40");
 		defaultProps.setProperty("openkad.kbucket.nrbucket", "30");
 		defaultProps.setProperty("openkad.color.nrcolors", "14");
 		defaultProps.setProperty("openkad.scheme.name", "emulekad.udp");
@@ -97,6 +96,10 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.nodes.file.path", "nodes.dat");
 
 		// find node
+		//SEARCHTOLERANCE				16777216=2^24
+//		defaultProps.setProperty("openkad.search.tolerance", "16777216");
+		defaultProps.setProperty("openkad.findnode.prefix_length.tolerance", "16");
+		defaultProps.setProperty("openkad.findnode.try_times", "3");
 		defaultProps.setProperty("openkad.findnode.response.max_nodes", "11");
 		defaultProps.setProperty("openkad.findvalue.response.max_nodes", "2");
 		defaultProps.setProperty("openkad.store.response.max_nodes", "4");
@@ -156,6 +159,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.executors.ping.nrthreads", "1");
 		defaultProps.setProperty("openkad.executors.ping.max_pending", "16");
 		// cache settings
+		defaultProps.setProperty("openkad.findnode.usecache",true + "");
 		defaultProps.setProperty("openkad.cache.validtime",
 				TimeUnit.HOURS.toMillis(10) + "");
 		defaultProps.setProperty("openkad.cache.size", "100");
@@ -165,7 +169,7 @@ public class EMuleKadModule extends AbstractModule {
 				TimeUnit.MINUTES.toMillis(10) + "");
 		
 		// network timeouts and concurrency level
-		defaultProps.setProperty("openkad.net.concurrency", "50");
+		defaultProps.setProperty("openkad.net.concurrency", "100");
 		defaultProps.setProperty("openkad.net.timeout",
 				TimeUnit.SECONDS.toMillis(1) + "");
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
@@ -271,8 +275,8 @@ public class EMuleKadModule extends AbstractModule {
 	@Provides
 	@Singleton
 	@Named("openkad.timerpool")
-	Pool<Timer> provideTimerpool(@Named("openkad.timerpool.size") int poolSize,@Named("openkad.timers")List<Timer> systemTimers){
-		Pool<Timer> pool= new Pool<Timer>(poolSize);
+	List<Timer> provideTimerpool(@Named("openkad.timerpool.size") int poolSize,@Named("openkad.timers")List<Timer> systemTimers){
+		List<Timer> pool= new ArrayList<Timer>(poolSize);
 		for (int i = 0; i < poolSize; i++) {
 			Timer timer=new Timer("TimeoutTimer"+i,true);
 			pool.add(timer);
@@ -284,9 +288,8 @@ public class EMuleKadModule extends AbstractModule {
 	@Provides
 	@Named("openkad.timer")
 	Timer provideMessageDespatcherTimer(
-			@Named("openkad.timerpool") Pool<Timer> timerpool,
-			@Named("openkad.timers")List<Timer> systemTimers){
-		return timerpool.get();
+			@Named("openkad.timerpool") List<Timer> timerpool,@Named("openkad.rnd") Random rnd){
+		return timerpool.get(rnd.nextInt(timerpool.size()));
 //		Timer timer=new Timer("TimeoutTimer",true);
 //		systemTimers.add(timer);
 //		return timer;
@@ -656,15 +659,3 @@ class MyThreadFactory implements ThreadFactory{
 	}	
 }
 
-
-class Pool<T> extends ArrayList<T>{
-	private static final long serialVersionUID = 5889518818808780040L;
-	private Random rnd=new Random();
-	public Pool(int capacity){
-		super(capacity);
-	}
-	
-	public T get(){
-		return get(rnd.nextInt(this.size()));
-	}
-}

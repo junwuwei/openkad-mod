@@ -57,7 +57,7 @@ public class BootstrapHandler extends AbstractHandler {
 		List<Node> nodes = kBuckets.getAllNodes();
 		Collections.shuffle(nodes);
 		if (nodes.size() > bootstrapSize) {
-			nodes.subList(nodes.size(), bootstrapSize).clear();
+			nodes.subList( bootstrapSize,nodes.size()).clear();
 		}
 		rep.setNodes(nodes);
 		try {

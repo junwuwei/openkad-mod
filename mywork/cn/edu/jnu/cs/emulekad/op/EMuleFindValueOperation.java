@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +46,12 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private final Set<Node> alreadyQueried;
 	private final Set<Node> querying;
 	private int nrQueried;
+	private AtomicInteger nrComplete = new AtomicInteger(0);
 	private byte requestType = OpCodes.FIND_NODE;
 	private Collection<Node> bootstrap = Collections.emptyList();
 	private boolean gotCachedResult = false;
 	private long costTime;
+	private int nrTry = 0;
 
 	// dependencies
 	private final Provider<MessageDispatcher<Node>> msgDispatcherProvider;
@@ -57,7 +60,10 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private final Node localNode;
 	private final KadCache cache;
 	private final int keySize;
-	
+	private final int findNodeTolerance;
+	private final int maxTryTimes;
+	private final boolean useCache;
+
 	private static Logger logger = LoggerFactory
 			.getLogger(EMuleFindValueOperation.class);
 
@@ -67,14 +73,21 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 			@Named("openkad.bucket.kbuckets.maxsize") int kBucketSize,
 			Provider<EMuleKadRequest> findNodeRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
-			KBuckets kBuckets, KadCache cache,
-			@Named("openkad.keyfactory.keysize") int keySize) {
+			KBuckets kBuckets,
+			KadCache cache,
+			@Named("openkad.keyfactory.keysize") int keySize,
+			@Named("openkad.findnode.try_times") int maxTryTimes,
+			@Named("openkad.findnode.prefix_length.tolerance") int findNodeTolerance,
+			@Named("openkad.findnode.usecache")boolean useCache) {
 		this.localNode = localNode;
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
 		this.msgDispatcherProvider = msgDispatcherProvider;
 		this.cache = cache;
-		this.keySize=keySize;
+		this.keySize = keySize;
+		this.maxTryTimes = maxTryTimes;
+		this.findNodeTolerance = findNodeTolerance;
+		this.useCache=useCache;
 
 		alreadyQueried = new HashSet<Node>();
 		querying = new HashSet<Node>();
@@ -106,8 +119,18 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	}
 
 	private boolean hasMoreToQuery() {
-		return !querying.isEmpty()
-				|| !alreadyQueried.containsAll(knownClosestNodes);
+		if (querying.isEmpty() && alreadyQueried.containsAll(knownClosestNodes)) {
+			if (getLongestCommonPrefixLength() >= findNodeTolerance
+					|| nrTry >= maxTryTimes) {
+				return false;
+			} else {
+				nrTry++;
+				alreadyQueried.removeAll(knownClosestNodes);
+				return true;
+			}
+		} else {
+			return true;
+		}
 	}
 
 	private void sendFindNode(Node to) {
@@ -119,20 +142,21 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		msgDispatcherProvider.get()
 				.addFilter(new TypeMessageFilter(EMuleKadResponse.class))
 				.addFilter(new TargetKeyMessageFilter(key))
-				.addFilter(new SrcMessageFilter(to))
-				.setConsumable(true).setCallback(to, this)
-				.send(to, findNodeRequest);
+				.addFilter(new SrcMessageFilter(to)).setConsumable(true)
+				.setCallback(to, this).send(to, findNodeRequest);
 	}
 
 	@Override
 	public List<Node> doFindValue() {
-		logger.info("find value,key={}",key);
+		logger.info("find value,key={}", key);
 		long startTime = System.currentTimeMillis();
-		
-		List<Node> cacheResults = cache.search(key);
-		if (cacheResults != null){
-			logger.info("cache hited.");
-			return cacheResults;
+
+		if (useCache) {
+			List<Node> cacheResults = cache.search(key);
+			if (cacheResults != null) {
+				logger.info("cache hited.");
+				return cacheResults;
+			}
 		}
 
 		knownClosestNodes = kBuckets.getClosestNodesByKey(key, kBucketSize);
@@ -182,19 +206,23 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		synchronized (this) {
 			nrQueried = alreadyQueried.size() - 1 + querying.size();
 		}
-		
+
 		long endTime = System.currentTimeMillis();
 		costTime = endTime - startTime;
 		logger.info("finished find node,key={}, used {} seconds.", key,
 				TimeUnit.MILLISECONDS.toSeconds(costTime));
 		logger.info("nrQueried={},knownClosestNodes.size()={}", nrQueried,
 				knownClosestNodes.size());
-		
+		logger.info("nrComplete={},LongestCommonPrefixLength={}", nrComplete,
+				getLongestCommonPrefixLength());
+		logger.info("nrTry={}", nrTry);
+
 		return knownClosestNodes;
 	}
 
 	@Override
 	public synchronized void completed(KadMessage msg, Node n) {
+		nrComplete.incrementAndGet();
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
@@ -219,10 +247,10 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
-		if(exc instanceof TimeoutException){
+		if (exc instanceof TimeoutException) {
 			logger.debug(exc.getMessage());
-		}else{
-			logger.error("{}",exc);
+		} else {
+			logger.error("{}", exc);
 		}
 	}
 
@@ -230,13 +258,15 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		this.requestType = requestType;
 		return this;
 	}
-	
+
 	public long getCostTime() {
 		return costTime;
 	}
 
 	public int getLongestCommonPrefixLength() {
-		return keySize * 8 - key.xor(knownClosestNodes.get(0).getKey())
+		return keySize
+				* 8
+				- key.xor(knownClosestNodes.get(0).getKey())
 						.getFirstSetBitIndex() - 1;
 	}
 }

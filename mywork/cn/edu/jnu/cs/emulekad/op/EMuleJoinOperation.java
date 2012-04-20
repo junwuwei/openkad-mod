@@ -191,7 +191,7 @@ public class EMuleJoinOperation {
 				throw new RuntimeException(e1);
 			}
 
-			logger.debug("nrCompleted={}", nrCompleted);
+			logger.info("nrCompleted={}", nrCompleted);
 			if (kBuckets.getClosestNodesByKey(zeroKey, 1).isEmpty())
 				throw new IllegalStateException("all bootstrap nodes are down");
 

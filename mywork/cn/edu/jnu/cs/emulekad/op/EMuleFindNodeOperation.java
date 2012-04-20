@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +56,14 @@ public class EMuleFindNodeOperation implements
 	private final KBuckets kBuckets;
 	private final Node localNode;
 	private final int keySize;
+	private final int findNodeTolerance;
+	private final int maxTryTimes;
 
 	// measurement
+	private AtomicInteger nrComplete=new AtomicInteger(0);
 	private int nrQueried;
 	private long costTime;
+	private int nrTry=0;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(EMuleFindNodeOperation.class);
@@ -68,8 +73,11 @@ public class EMuleFindNodeOperation implements
 			@Named("openkad.bucket.kbuckets.maxsize") int kBucketSize,
 			Provider<EMuleKadRequest> EMuleKadRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
-			KBuckets kBuckets, @Named("openkad.keyfactory.keysize") int keySize) {
-
+			KBuckets kBuckets, @Named("openkad.keyfactory.keysize") int keySize,
+			@Named("openkad.findnode.try_times") int maxTryTimes,
+			@Named("openkad.findnode.prefix_length.tolerance") int findNodeTolerance) {
+		this.maxTryTimes=maxTryTimes;
+		this.findNodeTolerance=findNodeTolerance;
 		this.localNode = localNode;
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
@@ -115,8 +123,18 @@ public class EMuleFindNodeOperation implements
 	}
 
 	private boolean hasMoreToQuery() {
-		return !querying.isEmpty()
-				|| !alreadyQueried.containsAll(knownClosestNodes);
+		if(querying.isEmpty()
+				&& alreadyQueried.containsAll(knownClosestNodes)){
+			if(getLongestCommonPrefixLength() >= findNodeTolerance || nrTry >= maxTryTimes){
+				return false;
+			}else{
+				nrTry++;
+				alreadyQueried.removeAll(knownClosestNodes);
+				return true;
+			}
+		}else{
+			return true;
+		}
 	}
 
 	private void sendFindNode(Node to) {
@@ -201,14 +219,16 @@ public class EMuleFindNodeOperation implements
 //			Node node = iterator.next();
 //			logger.debug("ClosestKey={}", node.getKey());
 //		}
-		logger.debug("LongestCommonPrefixLength={}",
-				getLongestCommonPrefixLength());
+		logger.info("nrComplete={},LongestCommonPrefixLength={}",
+				nrComplete,getLongestCommonPrefixLength());
+		logger.info("nrTry={}",nrTry);
 
 		return knownClosestNodes;
 	}
 
 	@Override
 	public synchronized void completed(KadMessage msg, Node n) {
+		nrComplete.incrementAndGet();
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);

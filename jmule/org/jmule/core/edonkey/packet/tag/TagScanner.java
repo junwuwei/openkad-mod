@@ -156,7 +156,7 @@ public class TagScanner {
 				data.get(blobData);
 				return new BlobTag(tagName, blobData);
 			default:
-				System.out.printf("unknown tagType=0x%02X\n",tagType);
+				//System.out.printf("unknown tagType=0x%02X\n",tagType);
 				
 		}
 		return null;
