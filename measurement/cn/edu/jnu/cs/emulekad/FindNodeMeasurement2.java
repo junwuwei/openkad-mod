@@ -155,9 +155,10 @@ public class FindNodeMeasurement2 {
 		FindNodeMeasurement2 measurement;
 		
 		for (int timeout = 1; timeout <= 10; timeout++) {
+			logger.info("\n-----------------timeout={}-------------------", TimeUnit.SECONDS.toMillis(timeout));
 			for (int nrThread = 1; nrThread <= 10; nrThread++) {
-				measurement = new FindNodeMeasurement2(TimeUnit.SECONDS.toMillis(1));
-				logger.info("\n-----------------timeout={}-------------------", TimeUnit.SECONDS.toMillis(timeout));
+				measurement = new FindNodeMeasurement2(TimeUnit.SECONDS.toMillis(timeout));
+				
 				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns1 = measurement.doFindNode(OpCodes.FIND_NODE,
 						nrFind,nrThread);
@@ -166,7 +167,6 @@ public class FindNodeMeasurement2 {
 				}
 				
 				logger.info("\n");
-//				logger.info("\ntimeout={}", TimeUnit.SECONDS.toMillis(timeout));
 //				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns2 = measurement.doFindNode(OpCodes.STORE,
 						nrFind,nrThread);
@@ -175,7 +175,6 @@ public class FindNodeMeasurement2 {
 				}	
 				
 				logger.info("\n");
-//				logger.info("\ntimeout={}", TimeUnit.SECONDS.toMillis(timeout));
 //				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns3 = measurement.doFindNode(OpCodes.FIND_VALUE,
 						nrFind,nrThread);
