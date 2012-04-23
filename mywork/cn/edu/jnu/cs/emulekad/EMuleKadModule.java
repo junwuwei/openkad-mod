@@ -80,7 +80,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.keyfactory.keysize", "16");
 		defaultProps.setProperty("openkad.keyfactory.hashalgo", "MD4");
 		defaultProps.setProperty("openkad.bucket.kbuckets.maxsize", "10");
-		defaultProps.setProperty("openkad.bucket.kbuckets.optimal.maxsize", "40");
+		defaultProps.setProperty("openkad.bucket.kbuckets.optimal.maxsize", "20");
 		defaultProps.setProperty("openkad.kbucket.nrbucket", "30");
 		defaultProps.setProperty("openkad.color.nrcolors", "14");
 		defaultProps.setProperty("openkad.scheme.name", "emulekad.udp");
@@ -90,7 +90,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.bootstrap.response.max_nodes", "20");
 		defaultProps.setProperty("openkad.need_bootstrap.minsize", "20");
 		defaultProps.setProperty("openkad.bootstrap.ping_befor_insert",
-				false + "");
+				true + "");
 		defaultProps.setProperty("openkad.bootstrap.do_rendom_findnode",
 				false + "");
 		defaultProps.setProperty("openkad.nodes.file.path", "nodes.dat");
@@ -480,17 +480,18 @@ public class EMuleKadModule extends AbstractModule {
 			final Provider<KadNode> kadNodeProvider) {
 
 		return new TimerTask() {
-			List<Node> nodes = null;
+//			List<Node> nodes = null;
 
 			@Override
 			public void run() {
-				nodes = findNodeOperationProvider.get()
+//				nodes = findNodeOperationProvider.get()
+						 findNodeOperationProvider.get()
 						.setKey(keyFactory.generate())
 						// .setKey(localNode.getKey())
 						.setRequestType(OpCodes.FIND_NODE).doFindNode();
-				for (Node node : nodes) {
-					kBuckets.insert(kadNodeProvider.get().setNode(node));
-				}
+//				for (Node node : nodes) {
+//					kBuckets.insert(kadNodeProvider.get().setNode(node));
+//				}
 				System.out
 						.println("*****************kBuckets.size()="
 								+ kBuckets.getAllNodes().size()

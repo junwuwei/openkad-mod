@@ -39,13 +39,13 @@ public class FindNodeMeasurement2 {
 	public FindNodeMeasurement2(long timeout) throws IOException {
 		injector = Guice
 				.createInjector(new EMuleKadModule()
-						.setProperty("openkad.refresh.enable", false + "")
+						.setProperty("openkad.refresh.enable", true + "")
 						.setProperty("openkad.bootstrap.do_rendom_findnode",
 								false + "")
 						.setProperty("openkad.net.udp.port", "10000")
 						.setProperty("openkad.net.timeout", timeout + "")
 						.setProperty("openkad.bootstrap.ping_befor_insert",
-								false + "")
+								true + "")
 						.setProperty("openkad.nodes.file.path", "nodes.dat"));
 		keyFactory = injector.getInstance(KeyFactory.class);
 		eMuleKad = injector.getInstance(EMuleKad.class);
@@ -57,6 +57,8 @@ public class FindNodeMeasurement2 {
 	static class FindNodeStatistic {
 		double costTime = 0;
 		double nrQueried = 0;
+		double nrCompleted = 0;
+		double nrRetry = 0;
 		double nrThread=1;
 		double longestCommonProfixLength = 0;
 		String requestType = null;
@@ -64,8 +66,8 @@ public class FindNodeMeasurement2 {
 		public String toString() {
 			return String
 					.format("requestType=%s, average costTime=%.3f  %.3f seconds, "
-							+ "nrQueried=%.3f, longestCommonProfixLength=%.3f",
-							requestType, costTime, costTime/nrThread, nrQueried,
+							+ "nrQueried=%.3f,nrCompleted=%.3f,completedRate=%.3f%%, nrRetry=%.3f, longestCommonProfixLength=%.3f",
+							requestType, costTime, costTime/nrThread, nrQueried,nrCompleted,100*nrCompleted/nrQueried,nrRetry,
 							longestCommonProfixLength);
 		}
 	}
@@ -99,6 +101,8 @@ public class FindNodeMeasurement2 {
 						statistic.costTime += TimeUnit.MILLISECONDS.toSeconds(op
 								.getCostTime());
 						statistic.nrQueried += op.getNrQueried();
+						statistic.nrCompleted += op.getNrCompleted();
+						statistic.nrRetry += op.getNrRetry();
 						statistic.longestCommonProfixLength += op
 								.getLongestCommonPrefixLength();
 					}
@@ -117,6 +121,8 @@ public class FindNodeMeasurement2 {
 
 					statistic.costTime /= nrRequest;
 					statistic.nrQueried /= nrRequest;
+					statistic.nrCompleted /= nrRequest;
+					statistic.nrRetry /= nrRequest;
 					statistic.longestCommonProfixLength /= nrRequest;
 					statisticList.add(statistic);
 					latch.countDown();
@@ -149,24 +155,23 @@ public class FindNodeMeasurement2 {
 			e.printStackTrace();
 		}
 		// StatusPrinter.print(lc);
-		int nrFind = 100;
+		int nrFind = 10;
 //		int nrThread=2;
 //		int timeout=1;
 		FindNodeMeasurement2 measurement;
 		
-		for (int timeout = 1; timeout <= 10; timeout++) {
+		for (int timeout = 1; timeout <= 5; timeout++) {
 			logger.info("\n-----------------timeout={}-------------------", TimeUnit.SECONDS.toMillis(timeout));
-			for (int nrThread = 1; nrThread <= 10; nrThread++) {
+			for (int nrThread = 10; nrThread <= 10; nrThread++) {
 				measurement = new FindNodeMeasurement2(TimeUnit.SECONDS.toMillis(timeout));
 				
-				logger.info("nrThread={}", nrThread);
+				logger.info("\n****nrThread={}****", nrThread);
 				List<FindNodeStatistic> fns1 = measurement.doFindNode(OpCodes.FIND_NODE,
 						nrFind,nrThread);
 				for (FindNodeStatistic statitic:fns1) {
 					logger.info("{}", statitic);
 				}
 				
-				logger.info("\n");
 //				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns2 = measurement.doFindNode(OpCodes.STORE,
 						nrFind,nrThread);
@@ -174,7 +179,6 @@ public class FindNodeMeasurement2 {
 					logger.info("{}", statitic);
 				}	
 				
-				logger.info("\n");
 //				logger.info("nrThread={}", nrThread);
 				List<FindNodeStatistic> fns3 = measurement.doFindNode(OpCodes.FIND_VALUE,
 						nrFind,nrThread);

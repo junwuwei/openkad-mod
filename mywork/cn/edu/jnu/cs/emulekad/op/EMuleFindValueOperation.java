@@ -30,6 +30,7 @@ import il.technion.ewolf.kbr.KeyComparator;
 import il.technion.ewolf.kbr.Node;
 import il.technion.ewolf.kbr.concurrent.CompletionHandler;
 import il.technion.ewolf.kbr.openkad.KBuckets;
+import il.technion.ewolf.kbr.openkad.KadNode;
 import il.technion.ewolf.kbr.openkad.cache.KadCache;
 import il.technion.ewolf.kbr.openkad.msg.FindNodeResponse;
 import il.technion.ewolf.kbr.openkad.msg.KadMessage;
@@ -37,6 +38,11 @@ import il.technion.ewolf.kbr.openkad.net.MessageDispatcher;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
 import il.technion.ewolf.kbr.openkad.op.FindValueOperation;
 
+/**
+ * EMuleFindValueOperation与EMuleFindNode的不同之处在于可以提供buotstrap nodes以及使用cache
+ * @author Zhike Chan (zk.chan007@gmail.com)
+ * $create on: 2012-4-23
+ */
 public class EMuleFindValueOperation extends FindValueOperation implements
 		CompletionHandler<KadMessage, Node> {
 
@@ -51,7 +57,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private Collection<Node> bootstrap = Collections.emptyList();
 	private boolean gotCachedResult = false;
 	private long costTime;
-	private int nrTry = 0;
+	private int nrRetry = 0;
 
 	// dependencies
 	private final Provider<MessageDispatcher<Node>> msgDispatcherProvider;
@@ -63,6 +69,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 	private final int findNodeTolerance;
 	private final int maxTryTimes;
 	private final boolean useCache;
+	private final Provider<KadNode> kadNodeProvider;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(EMuleFindValueOperation.class);
@@ -74,6 +81,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 			Provider<EMuleKadRequest> findNodeRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
 			KBuckets kBuckets,
+			Provider<KadNode> kadNodeProvider,
 			KadCache cache,
 			@Named("openkad.keyfactory.keysize") int keySize,
 			@Named("openkad.findnode.try_times") int maxTryTimes,
@@ -83,6 +91,7 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
 		this.msgDispatcherProvider = msgDispatcherProvider;
+		this.kadNodeProvider=kadNodeProvider;
 		this.cache = cache;
 		this.keySize = keySize;
 		this.maxTryTimes = maxTryTimes;
@@ -120,13 +129,20 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 
 	private boolean hasMoreToQuery() {
 		if (querying.isEmpty() && alreadyQueried.containsAll(knownClosestNodes)) {
-			if (getLongestCommonPrefixLength() >= findNodeTolerance
-					|| nrTry >= maxTryTimes) {
+			if (getLongestCommonPrefixLength() >= findNodeTolerance) {
 				return false;
-			} else {
-				nrTry++;
-				alreadyQueried.removeAll(knownClosestNodes);
+			} else if (nrRetry < maxTryTimes) {
+				nrRetry++;
+//				if (nrCompleted.get() == 0) {
+					knownClosestNodes = kBuckets.getClosestNodesByKey(key,
+							(nrRetry + 1) * kBucketSize);
+					knownClosestNodes.removeAll(alreadyQueried);
+//				} else {
+//					alreadyQueried.removeAll(knownClosestNodes);
+//				}
 				return true;
+			} else {
+				return false;
 			}
 		} else {
 			return true;
@@ -215,13 +231,17 @@ public class EMuleFindValueOperation extends FindValueOperation implements
 				knownClosestNodes.size());
 		logger.info("nrComplete={},LongestCommonPrefixLength={}", nrComplete,
 				getLongestCommonPrefixLength());
-		logger.info("nrTry={}", nrTry);
+		logger.info("nrRetry={}", nrRetry);
 
 		return knownClosestNodes;
 	}
 
 	@Override
 	public synchronized void completed(KadMessage msg, Node n) {
+//		本应在KBuckets类的registerIncomingMessageHandler（）方法注册的
+//		messageDispatcher中插入结点信息，但是由于EMuleKadResponse中没有ID信息，在此处插入实属无奈
+		kBuckets.insert(kadNodeProvider.get()
+				.setNode(n).setNodeWasContacted());
 		nrComplete.incrementAndGet();
 		notifyAll();
 		querying.remove(n);

@@ -10,6 +10,7 @@ import il.technion.ewolf.kbr.KeyComparator;
 import il.technion.ewolf.kbr.Node;
 import il.technion.ewolf.kbr.concurrent.CompletionHandler;
 import il.technion.ewolf.kbr.openkad.KBuckets;
+import il.technion.ewolf.kbr.openkad.KadNode;
 import il.technion.ewolf.kbr.openkad.msg.KadMessage;
 import il.technion.ewolf.kbr.openkad.net.MessageDispatcher;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
@@ -58,29 +59,33 @@ public class EMuleFindNodeOperation implements
 	private final int keySize;
 	private final int findNodeTolerance;
 	private final int maxTryTimes;
-
+	private final Provider<KadNode> kadNodeProvider;
 	// measurement
-	private AtomicInteger nrComplete=new AtomicInteger(0);
+	private AtomicInteger nrCompleted = new AtomicInteger(0);
 	private int nrQueried;
 	private long costTime;
-	private int nrTry=0;
+	private int nrRetry = 0;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(EMuleFindNodeOperation.class);
 
 	@Inject
-	public EMuleFindNodeOperation(@Named("openkad.local.node") Node localNode,
+	public EMuleFindNodeOperation(
+			@Named("openkad.local.node") Node localNode,
 			@Named("openkad.bucket.kbuckets.maxsize") int kBucketSize,
 			Provider<EMuleKadRequest> EMuleKadRequestProvider,
 			Provider<MessageDispatcher<Node>> msgDispatcherProvider,
-			KBuckets kBuckets, @Named("openkad.keyfactory.keysize") int keySize,
+			Provider<KadNode> kadNodeProvider,
+			KBuckets kBuckets,
+			@Named("openkad.keyfactory.keysize") int keySize,
 			@Named("openkad.findnode.try_times") int maxTryTimes,
 			@Named("openkad.findnode.prefix_length.tolerance") int findNodeTolerance) {
-		this.maxTryTimes=maxTryTimes;
-		this.findNodeTolerance=findNodeTolerance;
+		this.maxTryTimes = maxTryTimes;
+		this.findNodeTolerance = findNodeTolerance;
 		this.localNode = localNode;
 		this.kBucketSize = kBucketSize;
 		this.kBuckets = kBuckets;
+		this.kadNodeProvider=kadNodeProvider;
 		this.EMuleKadRequestProvider = EMuleKadRequestProvider;
 		this.msgDispatcherProvider = msgDispatcherProvider;
 		this.keySize = keySize;
@@ -123,16 +128,23 @@ public class EMuleFindNodeOperation implements
 	}
 
 	private boolean hasMoreToQuery() {
-		if(querying.isEmpty()
-				&& alreadyQueried.containsAll(knownClosestNodes)){
-			if(getLongestCommonPrefixLength() >= findNodeTolerance || nrTry >= maxTryTimes){
+		if (querying.isEmpty() && alreadyQueried.containsAll(knownClosestNodes)) {
+			if (getLongestCommonPrefixLength() >= findNodeTolerance) {
 				return false;
-			}else{
-				nrTry++;
-				alreadyQueried.removeAll(knownClosestNodes);
+			} else if (nrRetry < maxTryTimes) {
+				nrRetry++;
+//				if (nrCompleted.get() == 0) {
+					knownClosestNodes = kBuckets.getClosestNodesByKey(key,
+							(nrRetry + 1) * kBucketSize);
+					knownClosestNodes.removeAll(alreadyQueried);
+//				} else {
+//					alreadyQueried.removeAll(knownClosestNodes);
+//				}
 				return true;
+			} else {
+				return false;
 			}
-		}else{
+		} else {
 			return true;
 		}
 	}
@@ -213,22 +225,26 @@ public class EMuleFindNodeOperation implements
 		logger.info("nrQueried={},knownClosestNodes.size()={}", nrQueried,
 				knownClosestNodes.size());
 
-//		logger.debug("targetKey ={}", key);
-//		for (Iterator<Node> iterator = knownClosestNodes.iterator(); iterator
-//				.hasNext();) {
-//			Node node = iterator.next();
-//			logger.debug("ClosestKey={}", node.getKey());
-//		}
-		logger.info("nrComplete={},LongestCommonPrefixLength={}",
-				nrComplete,getLongestCommonPrefixLength());
-		logger.info("nrTry={}",nrTry);
+		// logger.debug("targetKey ={}", key);
+		// for (Iterator<Node> iterator = knownClosestNodes.iterator(); iterator
+		// .hasNext();) {
+		// Node node = iterator.next();
+		// logger.debug("ClosestKey={}", node.getKey());
+		// }
+		logger.info("nrCompleted={},LongestCommonPrefixLength={}", nrCompleted,
+				getLongestCommonPrefixLength());
+		logger.info("nrRetry={}", nrRetry);
 
 		return knownClosestNodes;
 	}
 
 	@Override
 	public synchronized void completed(KadMessage msg, Node n) {
-		nrComplete.incrementAndGet();
+//		本应在KBuckets类的registerIncomingMessageHandler（）方法注册的
+//		messageDispatcher中插入结点信息，但是由于EMuleKadResponse中没有ID信息，在此处插入实属无奈
+		kBuckets.insert(kadNodeProvider.get()
+				.setNode(n).setNodeWasContacted());
+		nrCompleted.incrementAndGet();
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
@@ -255,10 +271,10 @@ public class EMuleFindNodeOperation implements
 		notifyAll();
 		querying.remove(n);
 		alreadyQueried.add(n);
-		if(exc instanceof TimeoutException){
+		if (exc instanceof TimeoutException) {
 			logger.debug(exc.getMessage());
-		}else{
-			logger.error("{}",exc);
+		} else {
+			logger.error("{}", exc);
 		}
 	}
 
@@ -267,7 +283,19 @@ public class EMuleFindNodeOperation implements
 	}
 
 	public int getLongestCommonPrefixLength() {
-		return keySize * 8 - key.xor(knownClosestNodes.get(0).getKey())
+		if (knownClosestNodes.isEmpty())
+			return 0;
+		return keySize
+				* 8
+				- key.xor(knownClosestNodes.get(0).getKey())
 						.getFirstSetBitIndex() - 1;
+	}
+
+	public int getNrCompleted() {
+		return nrCompleted.get();
+	}
+
+	public int getNrRetry() {
+		return nrRetry;
 	}
 }
