@@ -138,7 +138,7 @@ public class EMuleKadSerializer extends KadSerializer {
 			} else if (packetOpCode == OpCodes.KADEMLIA2_RES) {
 				logger.debug("deserializing EMuleKadResponse");
 				Key targetKey = readKey(in);
-				logger.debug("target key={}", targetKey.toHexString());
+				logger.debug("target key={}", targetKey);
 				EMuleKadResponse res = new EMuleKadResponse(
 						System.currentTimeMillis(), new Node(zeroKey),
 						targetKey);
@@ -170,8 +170,8 @@ public class EMuleKadSerializer extends KadSerializer {
 				logger.debug("deserializing SearchResponse");
 				Key clientKey = readKey(in);
 				Key targetKey = readKey(in);
-				logger.debug("clientKey={}", clientKey.toHexString());
-				logger.debug("targetKey={}", targetKey.toHexString());
+				logger.debug("clientKey={}", clientKey);
+				logger.debug("targetKey={}", targetKey);
 
 				int nrEntry = readTwoBytesAsInt(in);
 				logger.debug("nrEntry={}", nrEntry);
@@ -221,7 +221,7 @@ public class EMuleKadSerializer extends KadSerializer {
 				int load = readOneByte(in);
 				PublishResponse res = new PublishResponse(
 						System.currentTimeMillis(), new Node(zeroKey));
-				logger.debug("targetKey={}", targetKey.toHexString());
+				logger.debug("targetKey={}", targetKey);
 				res.setTargetKey(targetKey).setLoad(load);
 				logger.debug("load={}", load);
 				return res;
@@ -242,7 +242,7 @@ public class EMuleKadSerializer extends KadSerializer {
 				System.out
 						.println("deserializing PublishRequest,public keyword");
 				Key targetKey = readKey(in);
-				logger.debug("targetKey={}", targetKey.toHexString());
+				logger.debug("targetKey={}", targetKey);
 				int nrEntry = readTwoBytesAsInt(in);
 				logger.debug("nrEntry={}", nrEntry);
 				List<Entry> entries = readEntries(in, nrEntry);
@@ -322,7 +322,7 @@ public class EMuleKadSerializer extends KadSerializer {
 			writeOneByte(out, req.getRequestType());
 			out.write(cloneThenReverseKeyBytes(req.getKey().getBytes())); // Target
 																			// Key
-			logger.debug("target key={}", req.getKey().toHexString());
+			logger.debug("target key={}", req.getKey());
 			out.write(cloneThenReverseKeyBytes(req.getRecipient().getKey()
 					.getBytes())); // Recipient key
 			return;
@@ -459,7 +459,7 @@ public class EMuleKadSerializer extends KadSerializer {
 			entryContenBuffer.get(keyBytes);
 			Key clientKey = keyFactoryProvider.get().get(
 					reverseKeyBytes(keyBytes));
-			logger.debug("clientKey={}", clientKey.toHexString());
+			logger.debug("clientKey={}", clientKey);
 			int nrTag = unsignByteToInt(entryContenBuffer.get());
 			logger.debug("nrTag={}", nrTag);
 			TagList tagList = new TagList();

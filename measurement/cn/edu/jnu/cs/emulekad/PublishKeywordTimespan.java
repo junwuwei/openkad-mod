@@ -9,6 +9,8 @@ import il.technion.ewolf.kbr.KeyFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -51,27 +53,27 @@ public class PublishKeywordTimespan {
 		this.publishHelper = publishHelper;
 	}
 
-	public void doPublish(int nrPublish) {
-		String vanishString = "publish keyword timespan measurement";
-		Entry entry = publishHelper.makeKeywordEntry(vanishString);
-
-		for (int i = 0; i < nrPublish; i++) {
-			Key targetKey = keyFactory.generate();
-			int nrCompleted = eMuleKad.publishKeyword(targetKey, Arrays.asList(entry));
-			if (nrCompleted > 0) {
-				PublishRecord record = new PublishRecord(targetKey,
-						vanishString, System.currentTimeMillis(), nrCompleted);
-				publishRecords.add(record);
-			}
-		}
-		nrPublished = publishRecords.size();
-		logger.info("nrPublished={}", nrPublished);
-	}
-
-	public void doSearchTillAllVanish(int nrThread) {
-		latch = new CountDownLatch(nrPublished);
+	public void doPublish(final int nrPublish, int nrThread) {
+		final String vanishString = "publish keyword timespan measurement";
+		final Entry entry = publishHelper.makeKeywordEntry(vanishString);
+		final CountDownLatch latch = new CountDownLatch(nrThread);
 		for (int i = 0; i < nrThread; i++) {
-			Thread thread = creatSearchThread();
+			Thread thread = new Thread() {
+				public void run() {
+					for (int i = 0; i < nrPublish; i++) {
+						Key targetKey = keyFactory.generate();
+						int nrCompleted = eMuleKad.publishKeyword(targetKey,
+								Arrays.asList(entry));
+						if (nrCompleted > 0) {
+							PublishRecord record = new PublishRecord(targetKey,
+									vanishString, System.currentTimeMillis(),
+									nrCompleted);
+							publishRecords.add(record);
+						}
+					}
+					latch.countDown();
+				}
+			};
 			thread.start();
 		}
 		try {
@@ -79,45 +81,61 @@ public class PublishKeywordTimespan {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		nrPublished = publishRecords.size();
+		logger.info("nrPublished={}", nrPublished);
+	}
+
+	public void doSearchTillAllVanish(int nrThread, long step, long period) {
+		latch = new CountDownLatch(nrPublished);
+		Timer[] timers = new Timer[nrThread];
+		for (int i = 0; i < nrThread; i++) {
+			timers[i] = new Timer(true);
+		}
+		int i = 0;
+		for (PublishRecord record : publishRecords) {
+			TimerTask task = createTimerTask(record);
+			timers[++i % nrThread].schedule(task, i * step, period);
+		}
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		for(Timer timer:timers){
+			timer.cancel();
+		}
 
 		double averageTimespan = 0;
 		for (PublishRecord record : vanishedRecords) {
-			logger.info("{}", record);
 			averageTimespan += record.getTimespan(TimeUnit.HOURS);
 		}
 		averageTimespan /= nrPublished;
 		logger.info("\naverage timespan={}", averageTimespan);
 	}
 
-	private Thread creatSearchThread() {
-		return new Thread() {
-			public void run() {
-				while (vanishedRecords.size() < nrPublished) {
-					PublishRecord record = publishRecords.poll();
-					if (record == null) {
-						continue;
-					}
-					boolean isVanished = checkVanishStatus(record);
+	private TimerTask createTimerTask(final PublishRecord r) {
+		return new TimerTask() {
+			PublishRecord record = r;
 
-					if (isVanished) {
-						try {
-							vanishedRecords.put(record);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-//						logger.debug("nrVanished={}", vanishedRecords.size());
-						latch.countDown();
-					} else {
-						try {
-							publishRecords.put(record);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+			public void run() {
+				boolean isVanished = checkVanishStatus();
+				if (isVanished) {
+					try {
+						logger.info("{}", record);
+						vanishedRecords.put(record);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
+					// logger.debug("nrVanished={}",
+					// vanishedRecords.size());
+					latch.countDown();
+					this.cancel();
 				}
 			}
 
-			private boolean checkVanishStatus(PublishRecord record) {
+			private boolean checkVanishStatus() {
+				record.nrSearch++;
+				record.lastSearchTime = System.currentTimeMillis();
 				List<Entry> entries = eMuleKad.searchKeyword(record.targetKey);
 
 				for (Entry entry : entries) {
@@ -164,23 +182,25 @@ public class PublishKeywordTimespan {
 						.setProperty("openkad.bootstrap.ping_befor_insert",
 								false + "").setProperty("openkad.seed", "0"));
 
-		 EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
-//		FakeEMuleKad eMuleKad = new FakeEMuleKad(OperationResult.SUCCESS);
+		EMuleKad eMuleKad = injector.getInstance(EMuleKad.class);
+		// FakeEMuleKad eMuleKad = new FakeEMuleKad(OperationResult.SUCCESS);
 		eMuleKad.create();
 		NodesDatFile nodesDatFile = injector.getInstance(NodesDatFile.class);
 		eMuleKad.joinNode(nodesDatFile.readNodeFromFile());
 
-		 PublishKeywordTimespan measurement = injector
-		 .getInstance(PublishKeywordTimespan.class);
-//		KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
-//		PublishHelper publishHelper = injector.getInstance(PublishHelper.class);
-//		PublishKeywordTimespan measurement = new PublishKeywordTimespan(eMuleKad,
-//				keyFactory, publishHelper);
+		PublishKeywordTimespan measurement = injector
+				.getInstance(PublishKeywordTimespan.class);
+		// KeyFactory keyFactory = injector.getInstance(KeyFactory.class);
+		// PublishHelper publishHelper =
+		// injector.getInstance(PublishHelper.class);
+		// PublishKeywordTimespan measurement = new
+		// PublishKeywordTimespan(eMuleKad,
+		// keyFactory, publishHelper);
 
-		measurement.doPublish(500);
-		 TimeUnit.HOURS.sleep(18);
-//		eMuleKad.setOperationResult(OperationResult.FAIL);
-		measurement.doSearchTillAllVanish(20);
+		measurement.doPublish(50, 2);
+		 TimeUnit.MINUTES.sleep(1);
+		// eMuleKad.setOperationResult(OperationResult.FAIL);
+		measurement.doSearchTillAllVanish(2,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
 
 		eMuleKad.shutdown();
 	}

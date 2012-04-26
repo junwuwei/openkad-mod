@@ -85,6 +85,7 @@ public class EMuleKadNet implements EMuleKad {
 	private final Provider<BootstrapHandler> BootStrapHandlerProvider;
 	private final Provider<EMuleKadRequestHandler> eMuleKadRequestHandlerProvider;
 	private final Provider<SearchHandler> searchHandlerProvider;
+	private final Provider<ExecutorService> pingExecutorProvider;
 
 	private final Provider<PublishHandler> publishHandlerProvider;
 	private final Node localNode;
@@ -121,6 +122,7 @@ public class EMuleKadNet implements EMuleKad {
 			Provider<BootstrapHandler> BootStrapHandlerProvider,
 			Provider<SearchHandler> searchHandlerProvider,
 			Provider<PublishHandler> publishHandlerProvider,
+			@Named("openkad.executors.ping")Provider<ExecutorService> pingExecutorProvider,
 			@Named("openkad.local.node") Node localNode,
 			KadServer kadServer,
 			KBuckets kBuckets,
@@ -145,6 +147,7 @@ public class EMuleKadNet implements EMuleKad {
 		this.BootStrapHandlerProvider = BootStrapHandlerProvider;
 		this.searchHandlerProvider = searchHandlerProvider;
 		this.publishHandlerProvider = publishHandlerProvider;
+		this.pingExecutorProvider=pingExecutorProvider;
 		this.localNode = localNode;
 		this.kadServer = kadServer;
 		this.kBuckets = kBuckets;
@@ -336,10 +339,11 @@ public class EMuleKadNet implements EMuleKad {
 
 	@Override
 	public void shutdown() {
-		kadServer.shutdown(kadServerThread);
+		pingExecutorProvider.get().shutdownNow();
 		for(Timer timer:systemTimersProvider.get()){
 			timer.cancel();
 		}
+		kadServer.shutdown(kadServerThread);
 		logger.info("EMuleKadNet shutdowned.");
 	}
 

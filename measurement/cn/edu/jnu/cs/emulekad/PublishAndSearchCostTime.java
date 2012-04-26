@@ -138,14 +138,15 @@ public class PublishAndSearchCostTime {
 
 		// StatusPrinter.print(lc);
 		
+		int nrPublish=100;
 		for (int i = 1; i <=5; i++) {
 			PublishAndSearchCostTime measurement=new PublishAndSearchCostTime(TimeUnit.SECONDS.toMillis(i));
-			logger.info("timeout={}",TimeUnit.SECONDS.toMillis(i));
-			Statistic s=measurement.doPublishAndSearch(PublishAndSearchType.NOTE, 100);
+			logger.info("-------------------timeout={}----------------",TimeUnit.SECONDS.toMillis(i));
+			Statistic s=measurement.doPublishAndSearch(PublishAndSearchType.NOTE, nrPublish);
 			logger.info("{}",s);
-			s=measurement.doPublishAndSearch(PublishAndSearchType.SOURCE, 100);
+			s=measurement.doPublishAndSearch(PublishAndSearchType.SOURCE, nrPublish);
 			logger.info("{}",s);
-			s=measurement.doPublishAndSearch(PublishAndSearchType.KEYWORD, 100);
+			s=measurement.doPublishAndSearch(PublishAndSearchType.KEYWORD, nrPublish);
 			logger.info("{}",s);
 			measurement.shutdown();
 		}

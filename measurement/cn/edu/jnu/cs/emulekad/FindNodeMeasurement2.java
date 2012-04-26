@@ -138,6 +138,27 @@ public class FindNodeMeasurement2 {
 		return statisticList;
 	}
 
+	private static FindNodeStatistic getAverage(List<FindNodeStatistic> statisticList){
+		FindNodeStatistic average=new FindNodeStatistic();
+		int n=statisticList.size();
+		for (FindNodeStatistic s:statisticList) {
+			average.costTime+=s.costTime;
+			average.longestCommonProfixLength+=s.longestCommonProfixLength;
+			average.nrCompleted+=s.nrCompleted;
+			average.nrQueried+=s.nrQueried;
+			average.nrRetry+=s.nrRetry;
+			average.nrThread+=s.nrThread;
+			average.requestType=s.requestType;
+		}
+		average.costTime/=n;
+		average.longestCommonProfixLength/=n;
+		average.nrCompleted/=n;
+		average.nrQueried/=n;
+		average.nrRetry/=n;
+		average.nrThread/=n;
+		return average;
+	}
+	
 	public void shutdown() {
 		eMuleKad.shutdown();
 	}
@@ -155,36 +176,28 @@ public class FindNodeMeasurement2 {
 			e.printStackTrace();
 		}
 		// StatusPrinter.print(lc);
-		int nrFind = 10;
+		int nrFind = 100;
 //		int nrThread=2;
 //		int timeout=1;
 		FindNodeMeasurement2 measurement;
 		
-		for (int timeout = 1; timeout <= 5; timeout++) {
-			logger.info("\n-----------------timeout={}-------------------", TimeUnit.SECONDS.toMillis(timeout));
+		for (int n = 1; n <= 10; n++) {
+			logger.info("\n-----------------timeout={}-------------------", n*500);
 			for (int nrThread = 10; nrThread <= 10; nrThread++) {
-				measurement = new FindNodeMeasurement2(TimeUnit.SECONDS.toMillis(timeout));
+				measurement = new FindNodeMeasurement2(n*500);
 				
-				logger.info("\n****nrThread={}****", nrThread);
+				logger.info("****nrThread={}****", nrThread);
 				List<FindNodeStatistic> fns1 = measurement.doFindNode(OpCodes.FIND_NODE,
 						nrFind,nrThread);
-				for (FindNodeStatistic statitic:fns1) {
-					logger.info("{}", statitic);
-				}
+				logger.info("{}", getAverage(fns1));
 				
-//				logger.info("nrThread={}", nrThread);
-				List<FindNodeStatistic> fns2 = measurement.doFindNode(OpCodes.STORE,
-						nrFind,nrThread);
-				for (FindNodeStatistic statitic:fns2) {
-					logger.info("{}", statitic);
-				}	
-				
-//				logger.info("nrThread={}", nrThread);
-				List<FindNodeStatistic> fns3 = measurement.doFindNode(OpCodes.FIND_VALUE,
-						nrFind,nrThread);
-				for (FindNodeStatistic statitic:fns3) {
-					logger.info("{}", statitic);
-				}			
+//				List<FindNodeStatistic> fns2 = measurement.doFindNode(OpCodes.STORE,
+//						nrFind,nrThread);
+//				logger.info("{}", getAverage(fns2));
+//				
+//				List<FindNodeStatistic> fns3 = measurement.doFindNode(OpCodes.FIND_VALUE,
+//						nrFind,nrThread);
+//				logger.info("{}", getAverage(fns3));		
 
 				measurement.shutdown();
 			}
