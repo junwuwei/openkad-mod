@@ -451,20 +451,20 @@ public class EMuleKadSerializer extends KadSerializer {
 			throws IOException {
 		byte[] entryContentBytes = new byte[in.available()];
 		in.read(entryContentBytes);
-		ByteBuffer entryContenBuffer = ByteBuffer.wrap(entryContentBytes)
+		ByteBuffer entryContentBuffer = ByteBuffer.wrap(entryContentBytes)
 				.order(ByteOrder.LITTLE_ENDIAN);
 		List<Entry> entries = new ArrayList<Entry>(nrEntry);
 		for (int i = 0; i < nrEntry; i++) {
 			byte[] keyBytes = new byte[keySize];
-			entryContenBuffer.get(keyBytes);
+			entryContentBuffer.get(keyBytes);
 			Key clientKey = keyFactoryProvider.get().get(
 					reverseKeyBytes(keyBytes));
 			logger.debug("clientKey={}", clientKey);
-			int nrTag = unsignByteToInt(entryContenBuffer.get());
+			int nrTag = unsignByteToInt(entryContentBuffer.get());
 			logger.debug("nrTag={}", nrTag);
 			TagList tagList = new TagList();
 			for (int j = 0; j < nrTag; j++) {
-				Tag tag = TagScanner.scanTag(entryContenBuffer);
+				Tag tag = TagScanner.scanTag(entryContentBuffer);
 				if (tag == null)
 					continue;
 				tagList.addTag(tag);
