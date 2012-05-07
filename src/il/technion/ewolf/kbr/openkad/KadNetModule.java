@@ -75,8 +75,9 @@ public class KadNetModule extends AbstractModule {
 		// performance params
 		
 		// handling incoming messages
-		defaultProps.setProperty("openkad.executors.server.nrthreads", "8"); 
-		defaultProps.setProperty("openkad.executors.server.max_pending", "128");
+		defaultProps.setProperty("openkad.executors.server.corethreads", "4"); 
+		defaultProps.setProperty("openkad.executors.server.max_threads", "20"); 
+		defaultProps.setProperty("openkad.executors.server.max_pending", "100");
 		// handling registered callback
 		defaultProps.setProperty("openkad.executors.client.nrthreads", "3"); 
 		defaultProps.setProperty("openkad.executors.client.max_pending", "128");

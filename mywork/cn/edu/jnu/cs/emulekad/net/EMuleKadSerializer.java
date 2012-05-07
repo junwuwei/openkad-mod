@@ -183,8 +183,7 @@ public class EMuleKadSerializer extends KadSerializer {
 				return res;
 
 			} else if (packetOpCode == OpCodes.KADEMLIA2_SEARCH_KEY_REQ) {
-				System.out
-						.println("deserializing SearchRequest,search keywork");
+				logger.debug("deserializing SearchRequest,search keywork");
 				Key targetKey = readKey(in);
 				SearchRequest req = new SearchRequest(
 						System.currentTimeMillis(), new Node(zeroKey));
@@ -239,8 +238,7 @@ public class EMuleKadSerializer extends KadSerializer {
 				return req;
 
 			} else if (packetOpCode == OpCodes.KADEMLIA2_PUBLISH_KEY_REQ) {
-				System.out
-						.println("deserializing PublishRequest,public keyword");
+				logger.debug("deserializing PublishRequest,public keyword");
 				Key targetKey = readKey(in);
 				logger.debug("targetKey={}", targetKey);
 				int nrEntry = readTwoBytesAsInt(in);
