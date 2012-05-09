@@ -204,10 +204,13 @@ public class KadServer implements Runnable {
 	 * 
 	 * @param kadServerThread
 	 */
-	public void shutdown(Thread kadServerThread) {
+	public synchronized void shutdown(Thread kadServerThread) {
 		isActive.set(false);
 		sockProvider.get().close();
-		srvExecutor.shutdownNow();
+		if(!srvExecutor.isShutdown()){
+			srvExecutor.shutdownNow();
+		}
+		
 		kadServerThread.interrupt();
 		try {
 			kadServerThread.join();

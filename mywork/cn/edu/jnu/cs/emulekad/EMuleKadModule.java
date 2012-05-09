@@ -140,8 +140,10 @@ public class EMuleKadModule extends AbstractModule {
 		// performance params
 
 		// handling incoming messages
-		defaultProps.setProperty("openkad.executors.server.nrthreads", "10");
-		defaultProps.setProperty("openkad.executors.server.max_pending", "128");
+		defaultProps.setProperty("openkad.receive.server.threads", "1");
+		defaultProps.setProperty("openkad.executors.server.corethreads", "4");
+		defaultProps.setProperty("openkad.executors.server.max_threads", "20");
+		defaultProps.setProperty("openkad.executors.server.max_pending", "50");
 		// handling registered callback
 		defaultProps.setProperty("openkad.executors.client.nrthreads", "2");
 		defaultProps.setProperty("openkad.executors.client.max_pending", "128");
@@ -170,8 +172,7 @@ public class EMuleKadModule extends AbstractModule {
 		
 		// network timeouts and concurrency level
 		defaultProps.setProperty("openkad.net.concurrency", "100");
-		defaultProps.setProperty("openkad.net.timeout",
-				TimeUnit.SECONDS.toMillis(1) + "");
+		defaultProps.setProperty("openkad.net.timeout","1500");//1.5s
 		defaultProps.setProperty("openkad.net.forwarded.timeout",
 				TimeUnit.SECONDS.toMillis(300) + "");
 
@@ -181,7 +182,7 @@ public class EMuleKadModule extends AbstractModule {
 		defaultProps.setProperty("openkad.color.allcolors", "95");
 
 		// timer thread
-		 defaultProps.setProperty("openkad.timerpool.size", "2");
+		 defaultProps.setProperty("openkad.timerpool.size", "1");
 
 		// local configuration, please touch
 		defaultProps.setProperty("openkad.net.udp.port", "10086");
@@ -376,13 +377,10 @@ public class EMuleKadModule extends AbstractModule {
 	@Named("openkad.executors.server")
 	@Singleton
 	ExecutorService provideServerExecutor(
-			@Named("openkad.executors.server.nrthreads") int nrThreads,
+			@Named("openkad.executors.server.corethreads") int coreThreads,
+			@Named("openkad.executors.server.max_threads") int maxThreads,
 			@Named("openkad.executors.server.max_pending") int maxPending) {
-		int n=(int) (0.5*nrThreads);
-		if(n==0){
-			n=1;
-		}
-		return new ThreadPoolExecutor(n, nrThreads, 5, TimeUnit.MINUTES,
+		return new ThreadPoolExecutor(coreThreads, maxThreads, 5, TimeUnit.MINUTES,
 				new ArrayBlockingQueue<Runnable>(maxPending, true),new MyThreadFactory("ServerExecutors"));
 	}
 

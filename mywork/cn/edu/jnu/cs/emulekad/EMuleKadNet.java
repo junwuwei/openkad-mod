@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -96,12 +97,13 @@ public class EMuleKadNet implements EMuleKad {
 	private final ExecutorService clientExecutor;
 	private final int bucketSize;
 	private final Provider<List<Timer>> systemTimersProvider;
+	private final int nrReceiveThreads;
 
 	// testing
 	private final List<Integer> findNodeHopsHistogram;
 	// state
 	private final Map<String, MessageDispatcher<?>> dispatcherFromTag = new HashMap<String, MessageDispatcher<?>>();
-	private Thread kadServerThread = null;
+	private List<Thread> kadServerThreads = new LinkedList<Thread>();
 
 	private boolean isCreated = false;
 
@@ -132,7 +134,8 @@ public class EMuleKadNet implements EMuleKad {
 			@Named("openkad.bucket.kbuckets.maxsize") int bucketSize,
 			@Named("openkad.timers") Provider<List<Timer>> systemTimersProvider,
 			// testing
-			@Named("openkad.testing.findNodeHopsHistogram") List<Integer> findNodeHopsHistogram) {
+			@Named("openkad.testing.findNodeHopsHistogram") List<Integer> findNodeHopsHistogram,
+			@Named("openkad.receive.server.threads")int nrReceiveThreads) {
 
 		this.msgDispatcherProvider = msgDispatcherProvider;
 		this.joinOperationProvider = joinOperationProvider;
@@ -156,6 +159,7 @@ public class EMuleKadNet implements EMuleKad {
 		this.clientExecutor = clientExecutor;
 		this.bucketSize = bucketSize;
 		this.systemTimersProvider=systemTimersProvider;
+		this.nrReceiveThreads=nrReceiveThreads;
 		// testing
 		this.findNodeHopsHistogram = findNodeHopsHistogram;
 	}
@@ -173,8 +177,12 @@ public class EMuleKadNet implements EMuleKad {
 
 			kBuckets.registerIncomingMessageHandler();
 			indexer.scheduleCleanTask();
-			kadServerThread = new Thread(kadServer);
-			kadServerThread.start();
+			for (int i = 1; i <= nrReceiveThreads; i++) {
+				Thread kadServerThread = new Thread(kadServer);
+				kadServerThread.setName("kadServer"+i);
+				kadServerThread.start();
+				kadServerThreads.add(kadServerThread);
+			}
 
 			isCreated = true;
 			logger.info("EMuleKadNet created.");
@@ -343,7 +351,10 @@ public class EMuleKadNet implements EMuleKad {
 		for(Timer timer:systemTimersProvider.get()){
 			timer.cancel();
 		}
-		kadServer.shutdown(kadServerThread);
+		for (Thread kadServerThread:kadServerThreads) {
+			kadServer.shutdown(kadServerThread);
+		}		
+			
 		logger.info("EMuleKadNet shutdowned.");
 	}
 
