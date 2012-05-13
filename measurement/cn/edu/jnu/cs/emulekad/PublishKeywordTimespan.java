@@ -198,9 +198,8 @@ public class PublishKeywordTimespan {
 		// keyFactory, publishHelper);
 
 		measurement.doPublish(50, 2);
-		 TimeUnit.MINUTES.sleep(1);
 		// eMuleKad.setOperationResult(OperationResult.FAIL);
-		measurement.doSearchTillAllVanish(2,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
+		measurement.doSearchTillAllVanish(3,300,TimeUnit.MINUTES.toMillis(2));
 
 		eMuleKad.shutdown();
 	}

@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 /**
- * 
+ * 本地节点存储和管理的一个数据条目
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class Entry {

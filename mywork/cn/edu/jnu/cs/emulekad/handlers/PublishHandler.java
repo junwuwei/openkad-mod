@@ -21,6 +21,10 @@ import il.technion.ewolf.kbr.openkad.net.MessageDispatcher;
 import il.technion.ewolf.kbr.openkad.net.filter.MessageFilter;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
 
+/**
+ * ¥¶¿ÌPublish«Î«Û
+ * @author Zhike Chan (zk.chan007@gmail.com)
+ */
 public class PublishHandler extends AbstractHandler {
 
 	// dependencies

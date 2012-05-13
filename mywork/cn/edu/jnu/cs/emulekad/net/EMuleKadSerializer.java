@@ -42,7 +42,10 @@ import static cn.edu.jnu.cs.emulekad.util.IOUtil.*;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
-
+/**
+ * 把各种消息序列化eMule kad协议报文或将报文反序列化为消息
+ * @author Zhike Chan (zk.chan007@gmail.com)
+ */
 public class EMuleKadSerializer extends KadSerializer {
 
 	// dependencies

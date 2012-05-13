@@ -10,7 +10,7 @@ import il.technion.ewolf.kbr.Key;
 import il.technion.ewolf.kbr.KeybasedRouting;
 
 /**
- * 
+ * eMule Kad接口，相比KeybasedRouting添加了eMule kad特有的方法。
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public interface EMuleKad extends KeybasedRouting {

@@ -4,7 +4,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-
+/**
+ * 数据条目队列
+ * @author Zhike Chan (zk.chan007@gmail.com)
+ */
 public class EntryList extends CopyOnWriteArrayList<Entry> {
 	private static final long serialVersionUID = 2090624259697003505L;
 

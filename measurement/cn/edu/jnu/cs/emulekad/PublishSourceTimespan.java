@@ -182,8 +182,9 @@ public class PublishSourceTimespan {
 						.setProperty("openkad.bootstrap.ping_befor_insert",
 								false + "")
 						.setProperty("openkad.seed", "0")
-						.setProperty("openkad.net.timeout",
-								TimeUnit.SECONDS.toMillis(1) + ""));
+//						.setProperty("openkad.net.timeout",
+//								TimeUnit.SECONDS.toMillis(1) + "")
+								);
 
 		EMuleKadNet eMuleKad = injector.getInstance(EMuleKadNet.class);
 		// FakeEMuleKad eMuleKad = new FakeEMuleKad(OperationResult.SUCCESS);
@@ -203,7 +204,7 @@ public class PublishSourceTimespan {
 		measurement.doPublish(50, 2);
 		 TimeUnit.MINUTES.sleep(1);
 		// eMuleKad.setOperationResult(OperationResult.FAIL);
-		measurement.doSearchTillAllVanish(2,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
+		measurement.doSearchTillAllVanish(3,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
 
 		eMuleKad.shutdown();
 	}

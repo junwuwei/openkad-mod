@@ -23,6 +23,10 @@ import il.technion.ewolf.kbr.openkad.net.MessageDispatcher;
 import il.technion.ewolf.kbr.openkad.net.filter.MessageFilter;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
 
+/**
+ * ¥¶¿ÌSearch«Î«Û
+ * @author Zhike Chan (zk.chan007@gmail.com)
+ */
 public class SearchHandler extends AbstractHandler {
 
 	// dependencies

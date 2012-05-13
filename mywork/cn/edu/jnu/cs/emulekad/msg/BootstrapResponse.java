@@ -11,7 +11,7 @@ import il.technion.ewolf.kbr.Node;
 import il.technion.ewolf.kbr.openkad.msg.KadResponse;
 
 /**
- *
+ * Bootstrap»Ø¸´ÏûÏ¢
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class BootstrapResponse extends KadResponse {

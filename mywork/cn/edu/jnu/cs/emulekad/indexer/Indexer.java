@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 /**
- * 
+ * 用于存储和管理保存在本地节点中的数据
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class Indexer {

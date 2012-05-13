@@ -42,76 +42,64 @@ public class FakeEMuleKad implements EMuleKad {
 
 	@Override
 	public void create() throws IOException {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void joinURI(Collection<URI> bootstraps) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void joinNode(Collection<Node> bootstraps) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public List<Node> findNode(Key k) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void register(String tag, MessageHandler handler) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void sendMessage(Node to, String tag, Serializable msg)
 			throws IOException {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public Future<Serializable> sendRequest(Node to, String tag,
 			Serializable msg) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public <A> void sendRequest(Node to, String tag, Serializable msg,
 			A attachment, CompletionHandler<Serializable, A> handler) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public KeyFactory getKeyFactory() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public List<Node> getNeighbours() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Node getLocalNode() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
 
 	}
 

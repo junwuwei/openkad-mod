@@ -197,7 +197,7 @@ public class PublishNoteTimespan {
 		measurement.doPublish(50,2);
 		 TimeUnit.MINUTES.sleep(5);
 //		eMuleKad.setOperationResult(OperationResult.FAIL);
-		measurement.doSearchTillAllVanish(2,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
+		measurement.doSearchTillAllVanish(3,TimeUnit.SECONDS.toMillis(3),TimeUnit.MINUTES.toMillis(2));
 
 		eMuleKad.shutdown();
 	}

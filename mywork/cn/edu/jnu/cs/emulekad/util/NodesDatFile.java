@@ -34,7 +34,7 @@ import com.google.inject.name.Named;
 import static cn.edu.jnu.cs.emulekad.util.IOUtil.*;
 
 /**
- * 
+ * 用于读取nodes.dat文件用于在节点启动时加入kad网络
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class NodesDatFile {

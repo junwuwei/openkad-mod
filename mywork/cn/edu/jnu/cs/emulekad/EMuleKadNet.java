@@ -61,7 +61,7 @@ import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
 import il.technion.ewolf.kbr.openkad.op.FindValueOperation;
 
 /**
- * 
+ * eMule kadµÄÊµÏÖ
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class EMuleKadNet implements EMuleKad {

@@ -26,7 +26,7 @@ import il.technion.ewolf.kbr.openkad.net.filter.MessageFilter;
 import il.technion.ewolf.kbr.openkad.net.filter.TypeMessageFilter;
 
 /**
- * 
+ * ¥¶¿ÌBootstrap«Î«Û
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class BootstrapHandler extends AbstractHandler {

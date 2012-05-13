@@ -38,7 +38,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 /**
- * 
+ * 基本的查找节点操作
  * @author Zhike Chan (zk.chan007@gmail.com)
  */
 public class EMuleFindNodeOperation implements

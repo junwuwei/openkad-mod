@@ -139,8 +139,8 @@ public class PublishAndSearchCostTime {
 		// StatusPrinter.print(lc);
 		
 		int nrPublish=100;
-		for (int i = 1; i <=5; i++) {
-			PublishAndSearchCostTime measurement=new PublishAndSearchCostTime(TimeUnit.SECONDS.toMillis(i));
+		for (int i = 3; i <=3; i++) {
+			PublishAndSearchCostTime measurement=new PublishAndSearchCostTime(500*i);
 			logger.info("-------------------timeout={}----------------",TimeUnit.SECONDS.toMillis(i));
 			Statistic s=measurement.doPublishAndSearch(PublishAndSearchType.NOTE, nrPublish);
 			logger.info("{}",s);
