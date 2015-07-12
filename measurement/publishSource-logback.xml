@@ -56,7 +56,7 @@
 		<appender-ref ref="FILE" />
 	</logger>
 
-	<logger name="cn.edu.jnu.cs.emulekad.PublishSourceTimespan"
+	<logger name="cn.edu.jnu.cs.emulekad.PublishTimespan"
 		level="debug" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE2" />

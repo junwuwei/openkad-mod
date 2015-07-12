@@ -1,0 +1,10 @@
+*.class
+*.orig
+.classpath
+.project
+.settings
+bin
+lib
+log
+readme.txt
+.hg
